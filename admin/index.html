@@ -1229,20 +1229,29 @@
         // ─── Data Loading ─────────────────────────────────────────────────
         async function loadEntries() {
             try {
-                const r = await fetch('../data/entries.json?t=' + Date.now());
-                const d = await r.json();
+                const d = await fetchJSONFromGitHub('data/entries.json');
                 ENTRIES = (d.entries || d || []).slice();
-            } catch (e) { ENTRIES = []; }
+            } catch (e) {
+                try {
+                    const r = await fetch('../data/entries.json?t=' + Date.now());
+                    const d = await r.json();
+                    ENTRIES = (d.entries || d || []).slice();
+                } catch (e2) { ENTRIES = []; }
+            }
             renderEntries();
             updateBadge();
         }
 
         async function loadSettings() {
             try {
-                const r = await fetch('../data/settings.json?t=' + Date.now());
-                SETTINGS = await r.json();
+                SETTINGS = await fetchJSONFromGitHub('data/settings.json');
             } catch (e) {
-                SETTINGS = { site_title: '', footer_copy: '', social_links: [], terms_link: '', terms_label: '' };
+                try {
+                    const r = await fetch('../data/settings.json?t=' + Date.now());
+                    SETTINGS = await r.json();
+                } catch (e2) {
+                    SETTINGS = { site_title: '', hero_title: '', diary_title: '', submit_title: '', footer_copy: '', social_links: [], terms_link: '', terms_label: '' };
+                }
             }
         }
 
@@ -1453,17 +1462,18 @@
 
         // ─── Submissions ─────────────────────────────────────────────────
         async function loadSubmissions() {
-            const { root } = getGitHubConfig();
-            const path = (root ? `${root}/data/submissions.json` : 'data/submissions.json');
-
             try {
-                const r = await fetch('../' + path + '?t=' + Date.now());
-                if (r.ok) {
-                    const d = await r.json();
-                    SUBMISSIONS = d.submissions || [];
-                } else { SUBMISSIONS = []; }
-                renderSubmissions();
-            } catch (e) { SUBMISSIONS = []; renderSubmissions(); }
+                SUBMISSIONS = (await fetchJSONFromGitHub('data/submissions.json')).submissions || [];
+            } catch (e) {
+                try {
+                    const r = await fetch('../data/submissions.json?t=' + Date.now());
+                    if (r.ok) {
+                        const d = await r.json();
+                        SUBMISSIONS = d.submissions || [];
+                    } else { SUBMISSIONS = []; }
+                } catch (e2) { SUBMISSIONS = []; }
+            }
+            renderSubmissions();
         }
 
         function renderSubmissions() {
@@ -1706,6 +1716,24 @@
                 if (statusEl) { statusEl.textContent = 'Connection Failed'; statusEl.style.color = 'var(--red)'; }
                 toast('Diagnostic failed: ' + err.message, 'error');
             }
+        }
+
+        async function fetchJSONFromGitHub(path) {
+            const { token, owner, repo, branch, root } = getGitHubConfig();
+            if (!token || !owner || !repo) throw new Error('GitHub not connected');
+
+            let fullPath = path.replace(/^\//, '');
+            if (root) fullPath = root.replace(/\/+$/, '') + '/' + fullPath;
+            fullPath = fullPath.replace(/\/+/g, '/');
+
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${fullPath}?ref=${branch}&t=${Date.now()}`;
+            const r = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (!r.ok) throw new Error(`Fetch failed: ${r.status}`);
+            const d = await r.json();
+            const content = Uint8Array.from(atob(d.content.replace(/\s/g, "")), c => c.charCodeAt(0));
+            return JSON.parse(new TextDecoder().decode(content));
         }
 
         async function pushToGitHub(path, data, message) {
