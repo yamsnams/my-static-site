@@ -1073,7 +1073,8 @@
                             <div class="form-group"><label>Branch (default: main)</label><input type="text"
                                     id="gh-branch" placeholder="main"></div>
                         </div>
-                        <button class="btn btn-primary" onclick="saveGitHubConfig()" style="margin-top:8px;">Connect
+                        <button class="btn btn-primary" id="gh-connect-btn" onclick="saveGitHubConfig()"
+                            style="margin-top:8px;">Connect
                             GitHub</button>
                         <p style="color:var(--muted);font-size:0.75rem;margin-top:12px;">
                             ⚠️ Token stored in your browser only. Create at GitHub → Settings → Developer Settings →
@@ -1381,12 +1382,47 @@
             };
         }
 
-        function saveGitHubConfig() {
+        async function saveGitHubConfig() {
+            const btn = document.getElementById('gh-connect-btn');
             const token = document.getElementById('gh-token').value.trim();
             const owner = document.getElementById('gh-owner').value.trim();
             const repo = document.getElementById('gh-repo').value.trim();
             const branch = document.getElementById('gh-branch').value.trim() || 'main';
             if (!token || !owner || !repo) { toast('All GitHub fields are required.', 'error'); return; }
+
+            if (btn) btn.textContent = 'Testing connection...';
+            try {
+                // 1. Test the connection to the repo
+                const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (!repoRes.ok) {
+                    if (repoRes.status === 404) throw new Error('Repository not found. Check owner and repo names.');
+                    if (repoRes.status === 401) throw new Error('Invalid GitHub token.');
+                    throw new Error(`GitHub Repo Error: ${repoRes.status}`);
+                }
+
+                const repoData = await repoRes.json();
+                if (!repoData.permissions || !repoData.permissions.push) {
+                    throw new Error('Token does not have push access to this repository. Check scopes (must have "repo").');
+                }
+
+                // 2. Test the branch exists
+                const branchRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${branch}`, {
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!branchRes.ok) {
+                    if (branchRes.status === 404) throw new Error(`Branch "${branch}" not found in this repository.`);
+                    throw new Error(`GitHub Branch Error: ${branchRes.status}`);
+                }
+            } catch (err) {
+                if (btn) btn.textContent = 'Connect GitHub';
+                toast(err.message, 'error');
+                return;
+            }
+
+            if (btn) btn.textContent = 'Connect GitHub';
             localStorage.setItem('gh_token', token);
             localStorage.setItem('gh_owner', owner);
             localStorage.setItem('gh_repo', repo);
@@ -1432,7 +1468,11 @@
                     toast('Saved to GitHub! Site updates in ~30s.', 'success');
                 } else {
                     const err = await res.json();
-                    throw new Error(err.message || 'GitHub API error');
+                    let errMsg = err.message || 'GitHub API error';
+                    if (res.status === 404) errMsg = "Branch or Repo not found. Check configuration in Site Settings.";
+                    if (res.status === 401) errMsg = "Invalid token or expired. Reconnect in Site Settings.";
+                    if (res.status === 422) errMsg = "SHA Mismatch. This happens if the file was changed elsewhere. Refresh and try again.";
+                    throw new Error(errMsg);
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
