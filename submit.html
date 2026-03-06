@@ -54,37 +54,39 @@
                 Your entry will be sent to the admin for review.</p>
         </form>
 
-        async function handleSubmit(e) {
-        e.preventDefault();
-        const author = document.getElementById('author_name').value.trim() || 'Anonymous';
-        const text = document.getElementById('diary_text').value.trim();
-        const btn = document.getElementById('submit-btn');
+        <script>
+            async function handleSubmit(e) {
+                e.preventDefault();
+                const author = document.getElementById('author_name').value.trim() || 'Anonymous';
+                const text = document.getElementById('diary_text').value.trim();
+                const btn = document.getElementById('submit-btn');
 
-        if (!text) return;
+                if (!text) return;
 
-        btn.textContent = 'Submitting…';
-        btn.disabled = true;
+                btn.textContent = 'Submitting…';
+                btn.disabled = true;
 
-        try {
-        const res = await fetch('/api/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author, text })
-        });
+                try {
+                    const res = await fetch('/api/submit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ author, text })
+                    });
 
-        if (res.ok) {
-        window.location.href = 'success.html';
-        } else {
-        const err = await res.json();
-        throw new Error(err.error || 'Submission failed');
-        }
-        } catch (err) {
-        console.error(err);
-        alert('Submission failed: ' + err.message + '\n\nPlease try again later.');
-        btn.textContent = 'submit diary';
-        btn.disabled = false;
-        }
-        }
+                    if (res.ok) {
+                        window.location.href = 'success.html';
+                    } else {
+                        const err = await res.json();
+                        throw new Error(err.error || 'Submission failed');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Submission failed: ' + err.message + '\n\nPlease try again later.');
+                    btn.textContent = 'submit diary';
+                    btn.disabled = false;
+                }
+            }
+        </script>
     </div>
 
     <!-- FOOTER -->

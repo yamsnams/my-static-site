@@ -1,16 +1,18 @@
 export async function onRequestPost(context) {
     const { request, env } = context;
 
-    // Get config from Environment Variables (set these in Cloudflare Dashboard)
+    // --- CONFIGURATION ---
+    // The TOKEN must be a secret Cloudflare Environment Variable.
+    // The Owner and Repo are hardcoded here for simplicity (they are public anyway).
     const GH_TOKEN = env.GH_TOKEN;
-    const GH_OWNER = env.GH_OWNER;
-    const GH_REPO = env.GH_REPO;
-    const GH_BRANCH = env.GH_BRANCH || 'main';
-    const GH_PATH = env.GH_PATH || '';
+    const GH_OWNER = "yamsnams";            // [!] Your GitHub username
+    const GH_REPO = "my-static-site";      // [!] Your Repository name
+    const GH_BRANCH = "main";               // [!] Your branch
+    const GH_PATH = "";                     // [!] Optional folder path
 
-    if (!GH_TOKEN || !GH_OWNER || !GH_REPO) {
+    if (!GH_TOKEN) {
         return new Response(JSON.stringify({
-            error: "Cloudflare Environment Variables missing (GH_TOKEN, GH_OWNER, GH_REPO)."
+            error: "GH_TOKEN is missing in Cloudflare Environment Variables."
         }), {
             status: 500,
             headers: { "Content-Type": "application/json" }
