@@ -56,11 +56,25 @@ export async function onRequestPost(context) {
         if (getRes.ok) {
             const fileData = await getRes.json();
             sha = fileData.sha;
-            // Fix: GitHub returns base64 with newlines which atob() may reject in some environments.
-            const content = Uint8Array.from(atob(fileData.content.replace(/\s/g, "")), c => c.charCodeAt(0));
-            const decoded = new TextDecoder().decode(content);
-            const json = JSON.parse(decoded);
-            submissions = json.submissions || [];
+            if (fileData.content) {
+                try {
+                    const normalizedContent = fileData.content.replace(/\s/g, "");
+                    const binaryString = atob(normalizedContent);
+                    const content = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+                    const decoded = new TextDecoder().decode(content);
+                    const json = JSON.parse(decoded);
+                    submissions = json.submissions || [];
+                } catch (e) {
+                    return new Response(JSON.stringify({
+                        error: "Content Decoding Failed",
+                        detail: e.message,
+                        content_slice: fileData.content.substring(0, 50)
+                    }), {
+                        status: 500,
+                        headers: { "Content-Type": "application/json" }
+                    });
+                }
+            }
         }
 
         // 2. Add new submission at the top
