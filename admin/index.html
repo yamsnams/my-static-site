@@ -1424,12 +1424,21 @@
             try {
                 const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' };
 
-                // 1. Check Token validity
-                logDiag(`Verifying token with GitHub API...`);
+                // 1. Check Token validity & Scopes
+                logDiag(`Verifying token permissions...`);
                 const userRes = await fetch('https://api.github.com/user', { headers });
-                if (!userRes.ok) throw new Error(`Token invalid (${userRes.status}). Check repo scope.`);
+                
+                // Inspect scopes
+                const scopes = userRes.headers.get('X-OAuth-Scopes') || 'none';
+                logDiag(`Token Scopes: [${scopes}]`);
+                
+                if (!userRes.ok) throw new Error(`Token invalid (${userRes.status}).`);
                 const userData = await userRes.json();
                 logDiag(`Authenticated as: ${userData.login}`);
+                
+                if (!scopes.includes('repo')) {
+                    logDiag(`⚠ WARNING: Token lacks "repo" scope. Write operations will fail with 404.`, true);
+                }
 
                 // 2. Check Repository
                 logDiag(`Locating repository: ${owner}/${repo}...`);
