@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Brand — Submit</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Netlify Identity Widget -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="site-header" role="banner">
+        <div class="header-left">
+            <a href="index.html" aria-label="Home">
+                <img class="icon-home" src="assets/icon-home.svg" alt="Home">
+            </a>
+            <a href="index.html">
+                <img class="brand-logo" src="assets/logo-brand.svg" alt="Brand Logo">
+            </a>
+        </div>
+        <div class="header-right">
+            <!-- No submit button on the submit page itself -->
+            <div class="social-icons">
+                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Social Link 1">
+                    <img src="assets/icon-social-1.svg" alt="Social">
+                </a>
+                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Social Link 2">
+                    <img src="assets/icon-social-2.svg" alt="Social">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="submit-page">
+        <!-- Netlify Form integration enabled with netlify data attribute -->
+        <form class="submit-form" name="diary-submission" method="POST" netlify action="success.html">
+            <input type="hidden" name="form-name" value="diary-submission">
+            <h2>share your diary</h2>
+
+            <div class="form-group">
+                <label for="author_name">your name (optional)</label>
+                <input type="text" id="author_name" name="author_name" placeholder="anonymous" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label for="diary_text">your words</label>
+                <textarea id="diary_text" name="diary_text" placeholder="write something beautiful…"
+                    required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">submit</button>
+        </form>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-left">
+            <span>&copy; 2026 Your Brand</span>
+        </div>
+        <div class="footer-right">
+            <a href="#">Terms and Policies</a>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

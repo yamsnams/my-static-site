@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Brand — Diary</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Netlify Identity Widget -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="site-header" role="banner">
+        <div class="header-left">
+            <a href="index.html" aria-label="Home">
+                <img class="icon-home" src="assets/icon-home.svg" alt="Home">
+            </a>
+            <a href="index.html">
+                <img class="brand-logo" src="assets/logo-brand.svg" alt="Brand Logo">
+            </a>
+        </div>
+        <div class="header-right">
+            <a class="header-submit-btn" href="submit.html">
+                submit your entry
+            </a>
+            <div class="social-icons">
+                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Social Link 1">
+                    <img src="assets/icon-social-1.svg" alt="Social">
+                </a>
+                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Social Link 2">
+                    <img src="assets/icon-social-2.svg" alt="Social">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- DIARY CONTAINER (Populated via JS) -->
+    <div class="diary-container" id="diary-container">
+        <!-- Dynamic content will be injected here -->
+    </div>
+
+    <!-- Navigation Dots (Populated via JS) -->
+    <nav class="diary-nav" aria-label="Diary entry navigation">
+        <!-- Dynamic dots will be injected here -->
+    </nav>
+
+    <!-- FOOTER -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="footer-left">
+            <span>&copy; 2026 Your Brand</span>
+        </div>
+        <div class="footer-right">
+            <a href="#">Terms and Policies</a>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

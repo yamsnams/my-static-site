@@ -1,0 +1,17 @@
+{
+    "site_title": "Your Brand",
+    "footer_copy": "© 2026 Your Brand",
+    "social_links": [
+        {
+            "name": "Social 1",
+            "icon": "assets/icon-social-1.svg",
+            "url": "#"
+        },
+        {
+            "name": "Social 2",
+            "icon": "assets/icon-social-2.svg",
+            "url": "#"
+        }
+    ],
+    "terms_link": "#"
+}

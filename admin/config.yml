@@ -1,0 +1,43 @@
+backend:
+  name: git-gateway
+  branch: main # Change to your branch name if different
+
+# Editorial Workflow enables Drafts/Review/Ready
+publish_mode: editorial_workflow
+
+media_folder: "assets"
+public_folder: "assets"
+
+collections:
+  - name: "diary"
+    label: "Diary Entries"
+    folder: "data"
+    extension: "json"
+    format: "json"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{author}}"
+    summary: "{{author}} - {{text}}"
+    fields:
+      - { label: "ID", name: "id", widget: "hidden", default: "entry-{{timestamp}}" }
+      - { label: "Author", name: "author", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime" }
+      - { label: "Entry Text", name: "text", widget: "text" }
+      - { label: "Illustration", name: "image", widget: "image" }
+
+  - name: "settings"
+    label: "Global Settings"
+    files:
+      - label: "Site Configuration"
+        name: "site_config"
+        file: "data/settings.json"
+        fields:
+          - { label: "Site Title", name: "site_title", widget: "string" }
+          - { label: "Footer Copyright", name: "footer_copy", widget: "string" }
+          - label: "Social Links"
+            name: "social_links"
+            widget: "list"
+            fields:
+              - { label: "Name", name: "name", widget: "string" }
+              - { label: "Icon", name: "icon", widget: "image" }
+              - { label: "URL", name: "url", widget: "string" }
+          - { label: "Terms & Policies URL", name: "terms_link", widget: "string" }

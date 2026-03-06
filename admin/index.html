@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel | Your Brand</title>
+    <!-- Netlify Identity Widget -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+
+<body>
+    <!-- Decap CMS -->
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script>
+        // Custom script to add a sidebar link to Netlify Forms
+        const addSidebarLink = () => {
+            const sidebar = document.querySelector('aside nav ul');
+            if (sidebar && !document.getElementById('netlify-forms-link')) {
+                const li = document.createElement('li');
+                li.id = 'netlify-forms-link';
+                li.style.marginTop = '20px';
+                li.style.borderTop = '1px dotted #ccc';
+                li.style.paddingTop = '10px';
+
+                const a = document.createElement('a');
+                a.href = 'https://app.netlify.com/sites-landing'; // Generic dashboard
+                a.target = '_blank';
+                a.innerHTML = '<span style="margin-right: 12px; font-size: 1.2em;">📋</span> Forms Dashboard';
+                a.style.display = 'flex';
+                a.style.alignItems = 'center';
+                a.style.padding = '10px 20px';
+                a.style.color = '#333';
+                a.style.textDecoration = 'none';
+                a.style.fontSize = '14px';
+                a.style.fontWeight = '500';
+
+                li.appendChild(a);
+                sidebar.appendChild(li);
+            }
+        };
+        // Poll for sidebar appearance
+        const observer = new MutationObserver(addSidebarLink);
+        observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+</body>
+
+</html>

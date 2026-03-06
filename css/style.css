@@ -1,0 +1,649 @@
+/*
+Theme Name: My Theme
+Theme URI: https://example.com
+Author: Custom
+Author URI: https://example.com
+Description: A minimalist, illustration-driven landing page theme inspired by diyadiya.studio, featuring hover-reveal interactions, a scroll-snap diary section, and user submission support.
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: my-theme
+Requires at least: 6.0
+Requires PHP: 7.4
+*/
+
+/* ==========================================================================
+   CSS Custom Properties
+   ========================================================================== */
+
+:root {
+    /* Colors */
+    --color-bg: #ffffff;
+    --color-text: #1a1a1a;
+    --color-text-muted: #6b6b6b;
+    --color-border: #e0e0e0;
+    --color-accent: #333333;
+
+    /* Typography */
+    --font-primary: 'HomemadeApple', cursive;
+    --font-secondary: 'CoalhandLuke', cursive;
+
+    /* Spacing */
+    --header-height: 68px;
+    --footer-height: 60px;
+    --page-padding-x: 40px;
+    --page-padding-y: 20px;
+
+    /* Transitions */
+    --transition-reveal: opacity 0.6s ease, transform 0.6s ease;
+    --transition-fast: all 0.3s ease;
+}
+
+/* ==========================================================================
+   @font-face — User will replace these with their own font files
+   Place font files in the theme's /fonts/ directory
+   ========================================================================== */
+
+@font-face {
+    font-family: 'HomemadeApple';
+    src: url('../fonts/homemadeapple.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'CoalhandLuke';
+    src: url('../fonts/coalhandluke.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ==========================================================================
+   Reset & Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-primary);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--page-padding-x);
+    background-color: var(--color-bg);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-left .icon-home {
+    width: 36px;
+    height: 36px;
+    transition: var(--transition-fast);
+}
+
+.header-left .icon-home:hover {
+    opacity: 0.6;
+}
+
+.header-left .brand-logo {
+    height: 32px;
+    width: auto;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    /* Matches .brand-logo height exactly */
+    padding: 0 16px;
+    border: 1.5px solid var(--color-accent);
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    /* Funky indie border */
+    font-family: var(--font-secondary);
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    color: var(--color-text);
+    background: var(--color-bg);
+    transition: var(--transition-fast);
+    text-transform: lowercase;
+    text-decoration: none;
+    line-height: 1;
+    /* Prevent internal text rendering variations */
+}
+
+.header-submit-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    transform: rotate(-3deg) scale(1.04);
+}
+
+.header-right .social-icons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-right .social-icons img {
+    width: 36px;
+    height: 36px;
+    transition: var(--transition-fast);
+}
+
+.header-right .social-icons img:hover {
+    opacity: 0.7;
+    transform: scale(1.1);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.site-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: var(--footer-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--page-padding-x);
+    background-color: var(--color-bg);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+}
+
+.footer-right a {
+    transition: var(--transition-fast);
+}
+
+.footer-right a:hover {
+    color: var(--color-text);
+}
+
+/* ==========================================================================
+   Landing Page — Main Content
+   ========================================================================== */
+
+.landing-page {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-top: var(--header-height);
+    padding-bottom: var(--footer-height);
+}
+
+.landing-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- Hero Center --- */
+
+.hero-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-ornament {
+    width: 200px;
+    height: auto;
+    margin-bottom: -10px;
+    transition: var(--transition-fast);
+}
+
+.hero-center:hover .hero-ornament {
+    transform: scale(1.08) translateY(-4px);
+}
+
+.hero-logo {
+    max-width: 500px;
+    width: 80vw;
+    height: auto;
+    transition: var(--transition-fast);
+}
+
+.hero-center:hover .hero-logo {
+    transform: scale(1.03);
+}
+
+.hero-secondary-text {
+    font-family: var(--font-secondary);
+    font-size: 3rem;
+    color: var(--color-text);
+    margin-top: -10px;
+    letter-spacing: 0.02em;
+    transition: var(--transition-fast);
+}
+
+.hero-center:hover .hero-secondary-text {
+    transform: scale(1.04);
+}
+
+/* --- Corner Illustrations --- */
+
+.illustration-left {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.illustration-left img {
+    width: 200px;
+    height: auto;
+    transition: all 0.3s ease;
+}
+
+.illustration-left:hover img {
+    transform: rotate(-2deg) scale(1.02);
+}
+
+.illustration-right {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 3;
+}
+
+.illustration-right img {
+    width: 200px;
+    height: auto;
+    transition: all 0.3s ease;
+}
+
+.illustration-right:hover img {
+    transform: rotate(-2deg) scale(1.02);
+}
+
+/* --- Diary Button (Bottom Center) --- */
+.diary-btn-wrap {
+    position: fixed;
+    bottom: calc(var(--footer-height) + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99;
+}
+
+.diary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 32px;
+    border: 2px solid var(--color-accent);
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    /* Hand-drawn funky look */
+    font-family: var(--font-secondary);
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    color: var(--color-text);
+    background: var(--color-bg);
+    transition: all 0.3s ease;
+    text-transform: lowercase;
+}
+
+.diary-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    transform: rotate(-2deg) scale(1.02);
+    /* Indie hover interaction */
+}
+
+.diary-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    transition: transform 0.3s ease;
+}
+
+.diary-btn:hover svg {
+    transform: translateY(2px);
+}
+
+/* ==========================================================================
+   Diary Page — Scroll-Snap
+   ========================================================================== */
+
+.diary-container {
+    width: 100%;
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.diary-entry {
+    width: 100%;
+    height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--header-height) + 40px) var(--page-padding-x) calc(var(--footer-height) + 40px);
+    position: relative;
+}
+
+.diary-entry__image {
+    max-width: 250px;
+    width: 40vw;
+    height: auto;
+    margin-bottom: 32px;
+}
+
+.diary-entry__text {
+    max-width: 600px;
+    text-align: center;
+    font-family: var(--font-primary);
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-text);
+}
+
+.diary-entry__author {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Scroll indicator dots */
+.diary-nav {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.diary-nav__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-border);
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    padding: 0;
+}
+
+.diary-nav__dot.is-active {
+    background: var(--color-accent);
+    transform: scale(1.3);
+}
+
+/* No entries state */
+.diary-empty {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--page-padding-x);
+}
+
+.diary-empty p {
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Submission Page
+   ========================================================================== */
+
+.submit-page {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--header-height) + 40px) var(--page-padding-x) calc(var(--footer-height) + 40px);
+}
+
+.submit-form {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.submit-form h2 {
+    font-family: var(--font-secondary);
+    font-size: 2.5rem;
+    font-weight: 400;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 8px;
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    color: var(--color-text);
+    background: var(--color-bg);
+    transition: var(--transition-fast);
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--color-accent);
+}
+
+.form-group textarea {
+    min-height: 160px;
+    resize: vertical;
+}
+
+.submit-btn {
+    align-self: center;
+    padding: 14px 40px;
+    border: 1.5px solid var(--color-accent);
+    border-radius: 30px;
+    font-family: var(--font-secondary);
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    color: var(--color-text);
+    background: var(--color-bg);
+    transition: var(--transition-fast);
+    text-transform: lowercase;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+}
+
+/* Success/error messages */
+.form-message {
+    text-align: center;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.form-message--success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.form-message--error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media screen and (max-width: 768px) {
+    :root {
+        --page-padding-x: 20px;
+        --header-height: 56px;
+        --footer-height: 50px;
+    }
+
+    .hero-logo {
+        max-width: 300px;
+    }
+
+    .hero-secondary-text {
+        font-size: 2rem;
+    }
+
+    .hero-ornament {
+        width: 120px;
+    }
+
+    .illustration-left img,
+    .illustration-right img {
+        width: 120px;
+    }
+
+    .diary-entry__image {
+        max-width: 180px;
+        width: 50vw;
+    }
+
+    .diary-entry__text {
+        font-size: 1rem;
+    }
+
+    .header-left .brand-logo {
+        height: 24px;
+    }
+
+    .submit-btn-wrap {
+        top: 70px;
+        right: 20px;
+    }
+
+    .diary-nav {
+        right: 12px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+
+    .illustration-left,
+    .illustration-right {
+        display: none;
+    }
+
+    .hero-secondary-text {
+        font-size: 1.5rem;
+    }
+
+    .diary-btn {
+        padding: 10px 24px;
+        font-size: 0.85rem;
+    }
+}
