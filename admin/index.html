@@ -1155,12 +1155,21 @@
             await loadEntries();
             await loadSettings();
             renderOverview();
-            // Restore GitHub config status
-            const { owner, repo } = getGitHubConfig();
-            if (owner && repo) {
-                const ghStatus = document.getElementById('gh-status');
-                if (ghStatus) { ghStatus.textContent = `✓ Connected to ${owner}/${repo}`; ghStatus.style.color = 'var(--green)'; }
+
+            // Pre-fill GitHub settings from localStorage
+            const cfg = getGitHubConfig();
+            if (cfg.token) {
+                document.getElementById('gh-token').value = cfg.token;
+                document.getElementById('gh-owner').value = cfg.owner || '';
+                document.getElementById('gh-repo').value = cfg.repo || '';
+                document.getElementById('gh-branch').value = cfg.branch || 'main';
             }
+
+            if (cfg.owner && cfg.repo) {
+                const ghStatus = document.getElementById('gh-status');
+                if (ghStatus) { ghStatus.innerHTML = `✓ Connected to ${cfg.owner}/${cfg.repo}`; ghStatus.style.color = 'var(--green)'; }
+            }
+
             // Restore GoatCounter
             const gcCode = localStorage.getItem('gc_code');
             if (gcCode) { document.getElementById('gc-code').value = gcCode; showGoatCounter(gcCode); }
@@ -1405,10 +1414,16 @@
                 };
                 let sha = null;
                 try {
-                    const res = await fetch(`${apiBase}?ref=${branch}`, { headers });
+                    // GitHub API requires cache-busting to get the latest SHA, otherwise it fails with 409 Conflict
+                    const res = await fetch(`${apiBase}?ref=${branch}&t=${Date.now()}`, { headers });
                     if (res.ok) { const d = await res.json(); sha = d.sha; }
-                } catch (e) { }
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+                } catch (e) { console.warn("Could not fetch existing file SHA", e); }
+
+                // Safe UTF-8 to Base64 encoding
+                const jsonStr = JSON.stringify(data, null, 2);
+                const bytes = new TextEncoder().encode(jsonStr);
+                const content = btoa(String.fromCharCode(...bytes));
+
                 const body = { message: `[Admin] ${message}`, content, branch };
                 if (sha) body.sha = sha;
                 const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
