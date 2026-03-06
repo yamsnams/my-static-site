@@ -1493,12 +1493,13 @@
                 const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${fullPath}`;
                 const headers = {
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
                     'Content-Type': 'application/json'
                 };
 
                 // 1. Get SHA
-                logDiag(`Fetching SHA for ${fullPath}...`);
+                logDiag(`Fetching SHA for ${fullPath} on branch ${branch}...`);
                 let sha = null;
                 const checkRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
                 if (checkRes.ok) {
@@ -1506,11 +1507,11 @@
                     sha = d.sha;
                     logDiag(`SHA found: ${sha.substring(0, 7)}`);
                 } else {
-                    logDiag(`File not found or new. Status: ${checkRes.status}`);
+                    logDiag(`File status: ${checkRes.status} (New or Missing)`);
                 }
 
                 // 2. Push
-                logDiag(`Pushing update to GitHub...`);
+                logDiag(`Pushing commit to branch: ${branch}...`);
                 const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
                 const body = { message: `[Admin] ${message}`, content, branch };
@@ -1520,11 +1521,12 @@
                 if (res.ok) {
                     if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                     toast('Saved to GitHub!', 'success');
-                    logDiag(`SUCCESS: File committed.`);
+                    logDiag(`SUCCESS: Committed to ${branch}.`);
                 } else {
-                    const errJson = await res.json();
-                    logDiag(`FAIL: ${errJson.message}`, true);
-                    throw new Error(errJson.message || 'GitHub Error');
+                    const errStatus = res.status;
+                    const errJson = await res.json().catch(() => ({ message: 'Non-JSON Error' }));
+                    logDiag(`FAIL: ${errStatus} - ${errJson.message}`, true);
+                    throw new Error(errJson.message || `Error ${errStatus}`);
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
