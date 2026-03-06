@@ -34,7 +34,7 @@
     </header>
 
     <div class="submit-page">
-        <form class="submit-form" id="diary-form" onsubmit="sendEmail(event)">
+        <form class="submit-form" id="diary-form" onsubmit="handleSubmit(event)">
             <h2>share your diary</h2>
 
             <div class="form-group">
@@ -48,33 +48,43 @@
                     required></textarea>
             </div>
 
-            <button type="submit" class="submit-btn" id="submit-btn">submit via email</button>
+            <button type="submit" class="submit-btn" id="submit-btn">submit diary</button>
             <p
                 style="text-align:center; font-size:0.75rem; color:var(--text2); margin-top:20px; text-transform:lowercase;">
-                This will open your default email app.</p>
+                Your entry will be sent to the admin for review.</p>
         </form>
 
-        <script>
-            // Replace with the admin's actual email address
-            const ADMIN_EMAIL = "admin@yourdomain.com";
+        async function handleSubmit(e) {
+        e.preventDefault();
+        const author = document.getElementById('author_name').value.trim() || 'Anonymous';
+        const text = document.getElementById('diary_text').value.trim();
+        const btn = document.getElementById('submit-btn');
 
-            function sendEmail(e) {
-                e.preventDefault();
-                const author = document.getElementById('author_name').value.trim() || 'Anonymous';
-                const text = document.getElementById('diary_text').value.trim();
-                if (!text) return;
+        if (!text) return;
 
-                const subject = encodeURIComponent(`New Diary Entry from ${author}`);
-                const body = encodeURIComponent(`Author: ${author}\n\nEntry:\n${text}`);
+        btn.textContent = 'Submitting…';
+        btn.disabled = true;
 
-                window.location.href = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
+        try {
+        const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author, text })
+        });
 
-                // Show success text
-                const btn = document.getElementById('submit-btn');
-                btn.textContent = 'Opening Email App...';
-                setTimeout(() => { btn.textContent = 'submit via email'; }, 3000);
-            }
-        </script>
+        if (res.ok) {
+        window.location.href = 'success.html';
+        } else {
+        const err = await res.json();
+        throw new Error(err.error || 'Submission failed');
+        }
+        } catch (err) {
+        console.error(err);
+        alert('Submission failed: ' + err.message + '\n\nPlease try again later.');
+        btn.textContent = 'submit diary';
+        btn.disabled = false;
+        }
+        }
     </div>
 
     <!-- FOOTER -->

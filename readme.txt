@@ -132,13 +132,23 @@ Steps to set up:
    b) Enter: GitHub Token, username (Owner), Repository name, and Branch (main).
    c) Click **"Connect & Run Diagnostics"**.
 
-3. THE DIAGNOSTIC CONSOLE:
-   If the connection fails (e.g., 404 error), the **Diagnostic Console** in the 
-   Admin Panel will show you exactly which field is wrong. It verifies your 
-   token, repository, branch, and folder path step-by-step.
+3. ASSET MANAGEMENT:
+   - Use the **Assets tab** to upload illustrations (SVGs/Images) to your repo.
+   - These assets will automatically appear in a dropdown when you create or 
+     edit diary entries.
 
-After this, every diary save, edit, delete, and settings change will
-automatically commit to your GitHub repo. Cloudflare Pages deploys in ~30s.
+4. AUTOMATED SUBMISSIONS:
+   - Public submissions now go to your Admin Panel for review.
+   - **IMPORTANT:** You MUST add your GitHub details to the Cloudflare 
+     Dashboard (Settings → Environment Variables) for the API to work:
+     - `GH_TOKEN`: Your Personal Access Token (with repo scope)
+     - `GH_OWNER`: Your GitHub username
+     - `GH_REPO`: Your repository name
+   - Once set, refresh your Admin Submissions tab to approve new entries.
+
+After this, every diary save, edit, delete, asset upload, and visitor 
+submission will be handled directly in your beautiful new Admin Panel!
+Cloudflare Pages deploys changes in ~30s.
 
 
 --------------------------------------------------------------------------------

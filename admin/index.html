@@ -773,8 +773,13 @@
                 <textarea id="m-text" rows="5" placeholder="Write the diary entry…"></textarea>
             </div>
             <div class="form-group">
-                <label>Illustration path (e.g. assets/illustration-left.svg)</label>
-                <input type="text" id="m-image" placeholder="assets/illustration-left.svg">
+                <label>Illustration</label>
+                <select id="m-image">
+                    <option value="">None</option>
+                </select>
+                <p style="font-size:0.7rem; color:var(--muted); margin-top:4px;">Upload new illustrations in the <span
+                        style="color:var(--accent2); cursor:pointer;"
+                        onclick="closeModal('entryModal'); navToPage('assets')">Assets tab</span>.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" onclick="closeModal('entryModal')">Cancel</button>
@@ -818,7 +823,15 @@
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
-                    Form Submissions
+                    Submissions
+                </button>
+                <button class="nav-item" onclick="showPage('assets', this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    Assets
                 </button>
                 <div class="nav-section-label">Manage</div>
                 <button class="nav-item" onclick="showPage('page-content', this)">
@@ -938,22 +951,40 @@
                 <div class="section-header">
                     <div>
                         <div class="section-title">Form Submissions</div>
-                        <div class="section-sub">Visitor diary submissions from the Submit page</div>
+                        <div class="section-sub">Visitor diary submissions received via API</div>
+                    </div>
+                    <button class="btn btn-ghost danger" onclick="clearSubmissions()">Clear All</button>
+                </div>
+                <div id="submissions-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">📨</div>
+                        <div class="empty-msg">No submissions yet.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assets -->
+            <div class="page" id="page-assets">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Asset Management</div>
+                        <div class="section-sub">Upload and manage illustrations in /assets/</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="file" id="asset-upload-input" style="display:none;"
+                            onchange="handleAssetUpload(event)" accept="image/*">
+                        <button class="btn btn-primary"
+                            onclick="document.getElementById('asset-upload-input').click()">+ Upload Asset</button>
                     </div>
                 </div>
                 <div class="card">
-                    <p style="color:var(--text2);font-size:0.85rem;line-height:1.7;">
-                        Since external services like Netlify have been removed, public submissions cannot be
-                        automatically saved to your GitHub.
-                        <br><br>
-                        Instead, the <strong>submit.html</strong> page now opens the visitor's email client (via a
-                        <code>mailto:</code> link) to email the diary entry directly to you.
-                        <br><br>
-                        <strong style="color:var(--text);">How it works:</strong> When you receive a diary entry via
-                        email, simply copy it and go to the <strong style="color:var(--accent2); cursor:pointer;"
-                            onclick="navToDiary()">Diary Entries tab</strong> to publish it manually. This ensures a
-                        100% private, zero-cost, serverless setup.
-                    </p>
+                    <div id="assets-grid"
+                        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:16px;">
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <div class="empty-icon">📁</div>
+                            <div class="empty-msg">Loading assets…</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1117,6 +1148,8 @@
         // ─── State ───────────────────────────────────────────────────────
         let ENTRIES = [];
         let SETTINGS = {};
+        let ASSETS = [];
+        let SUBMISSIONS = [];
         let editingIndex = -1;
 
         // ─── Auth: GitHub PAT (Client-side) ──────────────────────────────
@@ -1149,6 +1182,8 @@
             document.getElementById('topbar-title').textContent = titles[id] || id;
             if (id === 'page-content' || id === 'settings') renderSettings();
             if (id === 'analytics') loadAnalyticsStats();
+            if (id === 'assets') loadAssets();
+            if (id === 'submissions') loadSubmissions();
         }
 
         function navToDiary() {
@@ -1165,6 +1200,7 @@
         async function initDashboard() {
             await loadEntries();
             await loadSettings();
+            await loadAssets(true); // Load background but don't re-render grid
             renderOverview();
 
             // Pre-fill GitHub settings from localStorage
@@ -1185,6 +1221,9 @@
             // Restore GoatCounter
             const gcCode = localStorage.getItem('gc_code');
             if (gcCode) { document.getElementById('gc-code').value = gcCode; showGoatCounter(gcCode); }
+
+            // Initial render call
+            renderAssets();
         }
 
         // ─── Data Loading ─────────────────────────────────────────────────
@@ -1301,6 +1340,190 @@
             renderOverview();
             updateBadge();
             pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Delete diary entry');
+        }
+
+        // ─── Assets ──────────────────────────────────────────────────────
+        async function loadAssets(silent = false) {
+            const { token, owner, repo, root } = getGitHubConfig();
+            if (!token || !owner || !repo) return;
+
+            try {
+                const path = root ? `${root}/assets` : 'assets';
+                const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (r.ok) {
+                    const files = await r.json();
+                    ASSETS = files.filter(f => f.type === 'file');
+                    if (!silent) renderAssets();
+                    updateAssetSelectors();
+                }
+            } catch (e) { console.error('Failed to load assets:', e); }
+        }
+
+        function renderAssets() {
+            const grid = document.getElementById('assets-grid');
+            if (!grid) return;
+            if (!ASSETS.length) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">📁</div><div class="empty-msg">No assets found in /assets/</div></div>';
+                return;
+            }
+            grid.innerHTML = ASSETS.map(a => `
+                <div class="card" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
+                    <div style="height:100px; background:var(--surface2); border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        <img src="${a.download_url}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                    </div>
+                    <div style="font-size:0.75rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${a.name}">${a.name}</div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-ghost danger" style="flex:1; padding:4px;" onclick="deleteAsset('${a.path}', '${a.sha}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateAssetSelectors() {
+            const select = document.getElementById('m-image');
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">None</option>' +
+                ASSETS.map(a => `<option value="${a.path}">${a.name}</option>`).join('');
+            select.value = currentVal;
+        }
+
+        async function handleAssetUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const content = ev.target.result.split(',')[1];
+                const { root } = getGitHubConfig();
+                const path = (root ? `${root}/assets/` : 'assets/') + file.name;
+
+                toast('Uploading asset…', 'info');
+                await pushFileToGitHub(path, content, `Upload asset: ${file.name}`);
+                loadAssets();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function deleteAsset(path, sha) {
+            if (!confirm('Delete this asset? This may break existing entries.')) return;
+            const { token, owner, repo } = getGitHubConfig();
+
+            toast('Deleting asset…', 'info');
+            try {
+                const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: `Delete asset: ${path}`, sha })
+                });
+                if (r.ok) {
+                    toast('Asset deleted.', 'success');
+                    loadAssets();
+                } else { throw new Error('Delete failed'); }
+            } catch (e) { toast(e.message, 'error'); }
+        }
+
+        async function pushFileToGitHub(path, base64Content, message) {
+            const { token, owner, repo, branch } = getGitHubConfig();
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+            try {
+                // Get SHA if exists
+                const check = await fetch(url + `?ref=${branch}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                let sha = null;
+                if (check.ok) { const d = await check.json(); sha = d.sha; }
+
+                const body = { message, content: base64Content, branch };
+                if (sha) body.sha = sha;
+
+                const r = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (r.ok) toast('Upload successful!', 'success');
+                else throw new Error('Upload failed');
+            } catch (e) { toast(e.message, 'error'); }
+        }
+
+        // ─── Submissions ─────────────────────────────────────────────────
+        async function loadSubmissions() {
+            const { root } = getGitHubConfig();
+            const path = (root ? `${root}/data/submissions.json` : 'data/submissions.json');
+
+            try {
+                const r = await fetch('../' + path + '?t=' + Date.now());
+                if (r.ok) {
+                    const d = await r.json();
+                    SUBMISSIONS = d.submissions || [];
+                } else { SUBMISSIONS = []; }
+                renderSubmissions();
+            } catch (e) { SUBMISSIONS = []; renderSubmissions(); }
+        }
+
+        function renderSubmissions() {
+            const wrap = document.getElementById('submissions-list');
+            if (!wrap) return;
+            if (!SUBMISSIONS.length) {
+                wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📨</div><div class="empty-msg">No submissions yet.</div></div>';
+                return;
+            }
+            wrap.innerHTML = '<div style="display:flex; flex-direction:column; gap:12px;">' +
+                SUBMISSIONS.map((s, i) => `
+                    <div class="card" style="padding:16px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="font-weight:600; font-size:0.9rem;">${s.author || 'Anonymous'}</span>
+                            <span style="font-size:0.75rem; color:var(--muted);">${s.date || ''}</span>
+                        </div>
+                        <p style="font-size:0.85rem; line-height:1.6; color:var(--text2); margin-bottom:12px;">${s.text || ''}</p>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-ghost" style="font-size:0.75rem; padding:4px 8px;" onclick="approveSubmission(${i})">Publish</button>
+                            <button class="btn btn-ghost danger" style="font-size:0.75rem; padding:4px 8px;" onclick="deleteSubmission(${i})">Dismiss</button>
+                        </div>
+                    </div>
+                `).join('') + '</div>';
+        }
+
+        async function approveSubmission(i) {
+            const s = SUBMISSIONS[i];
+            const entry = {
+                author: s.author || 'Anonymous',
+                date: new Date().toISOString().split('T')[0],
+                text: s.text || '',
+                image: 'assets/illustration-left.svg'
+            };
+            ENTRIES.unshift(entry);
+            SUBMISSIONS.splice(i, 1);
+
+            toast('Publishing entry…', 'info');
+            await pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Publish submission');
+            await saveSubmissions();
+            renderEntries();
+            renderSubmissions();
+            updateBadge();
+        }
+
+        async function deleteSubmission(i) {
+            if (!confirm('Dismiss this submission?')) return;
+            SUBMISSIONS.splice(i, 1);
+            await saveSubmissions();
+            renderSubmissions();
+        }
+
+        async function clearSubmissions() {
+            if (!confirm('Clear ALL submissions?')) return;
+            SUBMISSIONS = [];
+            await saveSubmissions();
+            renderSubmissions();
+        }
+
+        async function saveSubmissions() {
+            await pushToGitHub('data/submissions.json', { submissions: SUBMISSIONS }, 'Update submissions');
         }
 
         // ─── Settings ────────────────────────────────────────────────────
