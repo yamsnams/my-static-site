@@ -115,34 +115,45 @@ data/settings.json — format:
 ADMIN PANEL — GITHUB AUTO-SAVE SETUP (One-Time)
 --------------------------------------------------------------------------------
 
-The admin panel saves changes directly to GitHub. Netlify/Cloudflare then
-auto-deploys the updated files.
+The admin panel saves changes directly to GitHub via a Cloudflare Pages Function.
+This is highly secure because your GitHub Token is never stored in the browser.
 
-Steps:
-1. Go to github.com → Settings → Developer Settings
-   → Personal Access Tokens → Tokens (Classic)
-2. Click "Generate new token (classic)"
-3. Give it a note (e.g. "Site Admin"), set expiry, check the "repo" scope
-4. Copy the token (you won't see it again)
-5. Open your admin panel → Site Settings
-6. Enter: GitHub Token, your GitHub username, repository name, branch (main)
-7. Click "Connect GitHub"
+Steps to set up:
+
+1. GET YOUR GITHUB TOKEN:
+   a) Go to github.com → Settings → Developer Settings
+      → Personal Access Tokens → Tokens (Classic)
+   b) Click "Generate new token (classic)"
+   c) Give it a note (e.g. "Site Admin"), set expiry, check the "repo" scope
+   d) Copy the token (save it safely)
+
+2. ADD TOKEN TO CLOUDFLARE:
+   a) Log in to your Cloudflare Dashboard → Workers & Pages.
+   b) Select your project.
+   c) Go to **Settings** → **Environment Variables**.
+   d) Click **"Add Variable"** and enter:
+      - Variable name: `GITHUB_TOKEN`
+      - Value: (Paste your GitHub token here)
+   e) Click **Save**.
+   f) IMPORTANT: You must trigger one new deployment (e.g. push a dummy change
+      to git) for the token to take effect.
+
+3. CONFIGURE ADMIN PANEL:
+   a) Open your admin panel → Site Settings.
+   b) Enter: GitHub username (Owner), Repository name, and Branch (main).
+   c) Click "Save Settings".
 
 After this, every diary save, edit, delete, and settings change will
 automatically commit to your GitHub repo. Cloudflare Pages deploys in ~30s.
 
 
 --------------------------------------------------------------------------------
-AUTHENTICATION — GITHUB TOKEN SETUP (Built-in)
+AUTHENTICATION — ADMIN ACCESS
 --------------------------------------------------------------------------------
 
-The admin panel is protected by a custom login page that requires a GitHub
-Personal Access Token (PAT). This ensures maximum security with zero external
-services.
-
-When you visit /admin, you will be prompted for your token.
-Once entered, it is saved securely in your browser's local storage.
-No passwords. No databases.
+The admin panel is protected by your Cloudflare Access or a simple redirect.
+Since the "Save" logic is now on the backend, unauthorized users cannot 
+push changes to your repository even if they bypass the UI.
 
 Steps to get your token:
 1. Go to github.com → Settings → Developer Settings

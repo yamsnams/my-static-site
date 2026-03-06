@@ -1064,25 +1064,23 @@
                             redeploys in ~30 seconds.
                         </p>
                         <div class="settings-grid">
-                            <div class="form-group"><label>GitHub Personal Access Token</label><input type="password"
-                                    id="gh-token" placeholder="ghp_xxxxxxxxxxxx"></div>
                             <div class="form-group"><label>Repository Owner (GitHub username)</label><input type="text"
                                     id="gh-owner" placeholder="yourusername"></div>
                             <div class="form-group"><label>Repository Name</label><input type="text" id="gh-repo"
                                     placeholder="my-static-site"></div>
                             <div class="form-group"><label>Branch (default: main)</label><input type="text"
                                     id="gh-branch" placeholder="main"></div>
-                            <div class="form-group" style="grid-column: span 2;"><label>Folder Path in Repo (leave empty
-                                    if site is at root)</label><input type="text" id="gh-path"
-                                    placeholder="e.g. my-folder"></div>
+                            <div class="form-group" style="grid-column: span 1;"><label>Folder Path in Repo
+                                    (optional)</label><input type="text" id="gh-path" placeholder="e.g. my-folder">
+                            </div>
                         </div>
                         <button class="btn btn-primary" id="gh-connect-btn" onclick="saveGitHubConfig()"
                             style="margin-top:8px;">Connect
                             GitHub</button>
                         <p style="color:var(--muted);font-size:0.75rem;margin-top:12px;">
-                            ⚠️ Token stored in your browser only. Create at GitHub → Settings → Developer Settings →
-                            Personal Access Tokens (Classic) with <strong style="color:var(--accent2);">repo</strong>
-                            scope.
+                            🔒 **Security Tip:** Your GitHub Token is now handled securely via Cloudflare Environment
+                            Variables.
+                            If you haven't set it up yet, check the <code>readme.txt</code> for instructions.
                         </p>
                     </div>
                 </div>
@@ -1161,9 +1159,7 @@
             renderOverview();
 
             // Pre-fill GitHub settings from localStorage
-            const cfg = getGitHubConfig();
-            if (cfg.token) {
-                document.getElementById('gh-token').value = cfg.token;
+            if (cfg.owner) {
                 document.getElementById('gh-owner').value = cfg.owner || '';
                 document.getElementById('gh-repo').value = cfg.repo || '';
                 document.getElementById('gh-branch').value = cfg.branch || 'main';
@@ -1380,7 +1376,6 @@
         // ─── GitHub API Auto-Push ────────────────────────────────────────
         function getGitHubConfig() {
             return {
-                token: localStorage.getItem('gh_token') || '',
                 owner: (localStorage.getItem('gh_owner') || '').trim(),
                 repo: (localStorage.getItem('gh_repo') || '').trim(),
                 branch: (localStorage.getItem('gh_branch') || 'main').trim(),
@@ -1390,133 +1385,60 @@
 
         async function saveGitHubConfig() {
             const btn = document.getElementById('gh-connect-btn');
-            const token = document.getElementById('gh-token').value.trim();
             const owner = document.getElementById('gh-owner').value.trim();
             const repo = document.getElementById('gh-repo').value.trim();
             const branch = document.getElementById('gh-branch').value.trim() || 'main';
-            let root = document.getElementById('gh-path').value.trim().replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
-            if (!token || !owner || !repo) { toast('All GitHub fields are required.', 'error'); return; }
+            let root = document.getElementById('gh-path').value.trim().replace(/^\/+|\/+$/g, '');
+            if (!owner || !repo) { toast('Owner and Repo names are required.', 'error'); return; }
 
-            if (btn) btn.textContent = 'Testing connection...';
-            try {
-                const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' };
-                // 1. Test the repo
-                const repoRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, { headers });
-                if (!repoRes.ok) {
-                    if (repoRes.status === 404) throw new Error('Repository not found. Check owner and repo names.');
-                    if (repoRes.status === 401) throw new Error('Invalid GitHub token. Ensure it has "repo" scope.');
-                    throw new Error(`GitHub Repo Error: ${repoRes.status}`);
-                }
-                const repoData = await repoRes.json();
-                if (!repoData.permissions || !repoData.permissions.push) {
-                    throw new Error('Token lacks push permission. Edit token scopes in GitHub Settings.');
-                }
-
-                // 2. Test the branch
-                const branchRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`, { headers });
-                if (!branchRes.ok) {
-                    if (branchRes.status === 404) throw new Error(`Branch "${branch}" not found in this repository.`);
-                    throw new Error(`GitHub Branch Error: ${branchRes.status}`);
-                }
-
-                // 3. Test if entries.json exists at the path
-                const fullPath = root ? `${root}/data/entries.json` : 'data/entries.json';
-                const fileRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${fullPath}?ref=${encodeURIComponent(branch)}`, { headers });
-                if (!fileRes.ok) throw new Error(`Path Error: Could not find "${fullPath}" in branch "${branch}".`);
-
-            } catch (err) {
-                if (btn) btn.textContent = 'Connect GitHub';
-                toast(err.message, 'error');
-                return;
-            }
-
-            if (btn) btn.textContent = 'Connect GitHub';
-            localStorage.setItem('gh_token', token);
             localStorage.setItem('gh_owner', owner);
             localStorage.setItem('gh_repo', repo);
             localStorage.setItem('gh_branch', branch);
             localStorage.setItem('gh_path', root);
+
             const s = document.getElementById('gh-status');
             if (s) { s.innerHTML = `✓ Connected to ${owner}/${repo} (${branch}${root ? `/${root}` : ''})`; s.style.color = 'var(--green)'; }
-            toast('GitHub connected and verified!', 'success');
+            toast('Settings saved! Make sure GITHUB_TOKEN is set in Cloudflare.', 'success');
         }
 
         async function pushToGitHub(path, data, message) {
-            const { token, owner, repo, branch, root } = getGitHubConfig();
-            if (!token || !owner || !repo) {
+            const { owner, repo, branch, root } = getGitHubConfig();
+            if (!owner || !repo) {
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
-                toast('GitHub credentials missing. Please reconnect in Settings.', 'error');
+                toast('GitHub info missing. Reconnect in Settings.', 'error');
                 return;
             }
 
-            // Construct final path: repo-root + folder-root + file-path
             let fullPath = path;
             if (root) fullPath = root + '/' + path;
-            fullPath = fullPath.replace(/\/+/g, '/'); // ensure no double slashes
+            fullPath = fullPath.replace(/\/+/g, '/');
 
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
 
             try {
-                const apiBase = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${fullPath}`;
-                const headers = {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                };
-
-                // 1. Get current file SHA (with cache busting)
-                let sha = null;
-                try {
-                    const checkUrl = `${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
-                    const res = await fetch(checkUrl, { headers });
-                    if (res.ok) {
-                        const d = await res.json();
-                        sha = d.sha;
-                    } else if (res.status === 404) {
-                        console.warn(`File not found at ${fullPath}. Will attempt to create new file.`);
-                    }
-                } catch (e) { console.warn("SHA fetch failed", e); }
-
-                // 2. Prepare Payload
+                // Prepare Payload
                 const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
-                const body = {
-                    message: `[Admin] ${message}`,
-                    content,
-                    branch: branch
-                };
-                if (sha) body.sha = sha;
 
-                // 3. Push to GitHub
-                const pushRes = await fetch(apiBase, {
-                    method: 'PUT',
-                    headers,
-                    body: JSON.stringify(body)
+                const res = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        owner, repo, branch, path: fullPath, content, message: `[Admin] ${message}`
+                    })
                 });
 
-                if (pushRes.ok) {
+                const result = await res.json();
+                if (res.ok) {
                     if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                     toast('Saved to GitHub successfully!', 'success');
                 } else {
-                    const errData = await pushRes.json();
-                    const status = pushRes.status;
-                    let detail = errData.message || 'Unknown error';
-
-                    if (status === 404) {
-                        detail = `404 Not Found. Target: ${owner}/${repo} at branch [${branch}]. File path: [${fullPath}]. Check your branch/repo names in Settings!`;
-                    } else if (status === 401) {
-                        detail = "401 Unauthorized. Your token might be invalid or expired.";
-                    } else if (status === 422) {
-                        detail = "422 Unprocessable. This usually means a SHA mismatch (refresh the page and try again).";
-                    }
-
-                    throw new Error(detail);
+                    throw new Error(result.error || 'Server Error');
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
-                toast(err.message, 'error');
-                console.error("GitHub Push Error Detail:", err);
+                toast('Save Error: ' + err.message, 'error');
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
             }
         }
