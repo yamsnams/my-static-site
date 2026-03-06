@@ -1421,7 +1421,7 @@
 
                 // 3. Test if entries.json exists at the path
                 const fullPath = root ? `${root}/data/entries.json` : 'data/entries.json';
-                const fileRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(fullPath)}?ref=${encodeURIComponent(branch)}`, { headers });
+                const fileRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${fullPath}?ref=${encodeURIComponent(branch)}`, { headers });
                 if (!fileRes.ok) throw new Error(`Path Error: Could not find "${fullPath}" in branch "${branch}".`);
 
             } catch (err) {
@@ -1452,7 +1452,7 @@
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
             try {
-                const apiBase = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(fullPath)}`;
+                const apiBase = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${fullPath}`;
                 const headers = {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/vnd.github.v3+json',
