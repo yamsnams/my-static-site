@@ -3,10 +3,10 @@ export async function onRequestPost(context) {
 
     // --- CONFIGURATION ---
     const GH_TOKEN = env.GH_TOKEN;
-    const GH_OWNER = "yamsnams";            // [!] Your GitHub username
-    const GH_REPO = "my-static-site";      // [!] Your Repository name
-    const GH_BRANCH = "main";               // [!] Your branch
-    const GH_PATH = "";                     // [!] Optional folder path
+    const GH_OWNER = env.GH_OWNER || "yamsnams";
+    const GH_REPO = env.GH_REPO || "my-static-site";
+    const GH_BRANCH = env.GH_BRANCH || "main";
+    const GH_PATH = env.GH_PATH || "";
 
     if (!GH_TOKEN) {
         return new Response(JSON.stringify({
