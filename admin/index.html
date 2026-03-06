@@ -1064,6 +1064,8 @@
                             redeploys in ~30 seconds.
                         </p>
                         <div class="settings-grid">
+                            <div class="form-group"><label>GitHub Personal Access Token</label><input type="password"
+                                    id="gh-token" placeholder="ghp_xxxxxxxxxxxx"></div>
                             <div class="form-group"><label>Repository Owner (GitHub username)</label><input type="text"
                                     id="gh-owner" placeholder="yourusername"></div>
                             <div class="form-group"><label>Repository Name</label><input type="text" id="gh-repo"
@@ -1074,13 +1076,20 @@
                                     (optional)</label><input type="text" id="gh-path" placeholder="e.g. my-folder">
                             </div>
                         </div>
-                        <button class="btn btn-primary" id="gh-connect-btn" onclick="saveGitHubConfig()"
-                            style="margin-top:8px;">Connect
-                            GitHub</button>
+                        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+                            <button class="btn btn-primary" id="gh-connect-btn" onclick="saveGitHubConfig()">Connect &
+                                Run Diagnostics</button>
+                            <span id="gh-status" style="font-size:0.75rem;">Not connected</span>
+                        </div>
+                        <div id="gh-debug-box" style="margin-top:16px; display:none;">
+                            <label style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">Diagnostic
+                                Console</label>
+                            <pre id="gh-log"
+                                style="background:#000; color:#0f0; padding:12px; border-radius:8px; font-size:0.7rem; max-height:150px; overflow:auto; margin-top:4px; font-family:monospace; border:1px solid #333;"></pre>
+                        </div>
                         <p style="color:var(--muted);font-size:0.75rem;margin-top:12px;">
-                            🔒 **Security Tip:** Your GitHub Token is now handled securely via Cloudflare Environment
-                            Variables.
-                            If you haven't set it up yet, check the <code>readme.txt</code> for instructions.
+                            🔒 **Privacy:** Token stored in your browser's <code>localStorage</code> only. Use a
+                            "Classic" token with <code>repo</code> scope.
                         </p>
                     </div>
                 </div>
@@ -1159,7 +1168,9 @@
             renderOverview();
 
             // Pre-fill GitHub settings from localStorage
+            const cfg = getGitHubConfig();
             if (cfg.owner) {
+                document.getElementById('gh-token').value = localStorage.getItem('gh_token') || '';
                 document.getElementById('gh-owner').value = cfg.owner || '';
                 document.getElementById('gh-repo').value = cfg.repo || '';
                 document.getElementById('gh-branch').value = cfg.branch || 'main';
@@ -1376,6 +1387,7 @@
         // ─── GitHub API Auto-Push ────────────────────────────────────────
         function getGitHubConfig() {
             return {
+                token: localStorage.getItem('gh_token') || '',
                 owner: (localStorage.getItem('gh_owner') || '').trim(),
                 repo: (localStorage.getItem('gh_repo') || '').trim(),
                 branch: (localStorage.getItem('gh_branch') || 'main').trim(),
@@ -1383,29 +1395,88 @@
             };
         }
 
+        function logDiag(msg, isError = false) {
+            const box = document.getElementById('gh-debug-box');
+            const log = document.getElementById('gh-log');
+            if (box) box.style.display = 'block';
+            if (log) {
+                const time = new Date().toLocaleTimeString();
+                log.innerHTML += `[${time}] ${isError ? '❌' : 'ℹ️'} ${msg}\n`;
+                log.scrollTop = log.scrollHeight;
+            }
+        }
+
         async function saveGitHubConfig() {
             const btn = document.getElementById('gh-connect-btn');
+            const statusEl = document.getElementById('gh-status');
+            const token = document.getElementById('gh-token').value.trim();
             const owner = document.getElementById('gh-owner').value.trim();
             const repo = document.getElementById('gh-repo').value.trim();
             const branch = document.getElementById('gh-branch').value.trim() || 'main';
             let root = document.getElementById('gh-path').value.trim().replace(/^\/+|\/+$/g, '');
-            if (!owner || !repo) { toast('Owner and Repo names are required.', 'error'); return; }
 
-            localStorage.setItem('gh_owner', owner);
-            localStorage.setItem('gh_repo', repo);
-            localStorage.setItem('gh_branch', branch);
-            localStorage.setItem('gh_path', root);
+            if (!token || !owner || !repo) { toast('Token, Owner, and Repo are all required.', 'error'); return; }
 
-            const s = document.getElementById('gh-status');
-            if (s) { s.innerHTML = `✓ Connected to ${owner}/${repo} (${branch}${root ? `/${root}` : ''})`; s.style.color = 'var(--green)'; }
-            toast('Settings saved! Make sure GITHUB_TOKEN is set in Cloudflare.', 'success');
+            const log = document.getElementById('gh-log');
+            if (log) log.innerHTML = ''; // Reset log
+            logDiag('Starting Diagnostic Trace...');
+
+            try {
+                const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' };
+
+                // 1. Check Token validity
+                logDiag(`Verifying token with GitHub API...`);
+                const userRes = await fetch('https://api.github.com/user', { headers });
+                if (!userRes.ok) throw new Error(`Token invalid (${userRes.status}). Check repo scope.`);
+                const userData = await userRes.json();
+                logDiag(`Authenticated as: ${userData.login}`);
+
+                // 2. Check Repository
+                logDiag(`Locating repository: ${owner}/${repo}...`);
+                const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
+                if (!repoRes.ok) throw new Error(`Repo not found (${repoRes.status}). Check Owner/Repo.`);
+                const repoData = await repoRes.json();
+                logDiag(`Repo found. Push permission: ${repoData.permissions.push}`);
+                if (!repoData.permissions.push) throw new Error('Token lacks push permission.');
+
+                // 3. Check Branch
+                logDiag(`Checking branch: ${branch}...`);
+                const branchRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${branch}`, { headers });
+                if (!branchRes.ok) throw new Error(`Branch "${branch}" not found (404).`);
+                logDiag(`Branch verified.`);
+
+                // 4. Check Path
+                const testPath = root ? `${root}/data/entries.json`.replace(/\/+/g, '/') : 'data/entries.json';
+                logDiag(`Testing file path access: ${testPath}...`);
+                const pathRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${testPath}?ref=${branch}`, { headers });
+                if (!pathRes.ok) throw new Error(`Path Error: Could not find "${testPath}".`);
+                logDiag(`Path verified. Test connection SUCCESSFUL.`);
+
+                // Save
+                localStorage.setItem('gh_token', token);
+                localStorage.setItem('gh_owner', owner);
+                localStorage.setItem('gh_repo', repo);
+                localStorage.setItem('gh_branch', branch);
+                localStorage.setItem('gh_path', root);
+
+                if (statusEl) {
+                    statusEl.innerHTML = `✓ Verified & Connected`;
+                    statusEl.style.color = 'var(--green)';
+                }
+                toast('GitHub connected! Auto-save is active.', 'success');
+
+            } catch (err) {
+                logDiag(err.message, true);
+                if (statusEl) { statusEl.textContent = 'Connection Failed'; statusEl.style.color = 'var(--red)'; }
+                toast('Diagnostic failed: ' + err.message, 'error');
+            }
         }
 
         async function pushToGitHub(path, data, message) {
-            const { owner, repo, branch, root } = getGitHubConfig();
-            if (!owner || !repo) {
+            const { token, owner, repo, branch, root } = getGitHubConfig();
+            if (!token || !owner || !repo) {
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
-                toast('GitHub info missing. Reconnect in Settings.', 'error');
+                toast('GitHub info missing.', 'error');
                 return;
             }
 
@@ -1417,28 +1488,38 @@
             if (indicator) indicator.textContent = '⏳ Saving…';
 
             try {
-                // Prepare Payload
+                const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${fullPath}`;
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                };
+
+                // 1. Get SHA
+                let sha = null;
+                const checkRes = await fetch(`${apiBase}?ref=${branch}&t=${Date.now()}`, { headers });
+                if (checkRes.ok) {
+                    const d = await checkRes.json();
+                    sha = d.sha;
+                }
+
+                // 2. Push
                 const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
+                const body = { message: `[Admin] ${message}`, content, branch };
+                if (sha) body.sha = sha;
 
-                const res = await fetch('/api/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        owner, repo, branch, path: fullPath, content, message: `[Admin] ${message}`
-                    })
-                });
-
-                const result = await res.json();
+                const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
                 if (res.ok) {
                     if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
-                    toast('Saved to GitHub successfully!', 'success');
+                    toast('Saved to GitHub!', 'success');
                 } else {
-                    throw new Error(result.error || 'Server Error');
+                    const errJson = await res.json();
+                    throw new Error(errJson.message || 'Error');
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
-                toast('Save Error: ' + err.message, 'error');
+                toast('GitHub Error: ' + err.message, 'error');
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
             }
         }

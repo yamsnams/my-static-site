@@ -115,8 +115,8 @@ data/settings.json — format:
 ADMIN PANEL — GITHUB AUTO-SAVE SETUP (One-Time)
 --------------------------------------------------------------------------------
 
-The admin panel saves changes directly to GitHub via a Cloudflare Pages Function.
-This is highly secure because your GitHub Token is never stored in the browser.
+The admin panel saves changes directly to GitHub from your browser.
+No backend or server configuration is required!
 
 Steps to set up:
 
@@ -127,21 +127,15 @@ Steps to set up:
    c) Give it a note (e.g. "Site Admin"), set expiry, check the "repo" scope
    d) Copy the token (save it safely)
 
-2. ADD TOKEN TO CLOUDFLARE:
-   a) Log in to your Cloudflare Dashboard → Workers & Pages.
-   b) Select your project.
-   c) Go to **Settings** → **Environment Variables**.
-   d) Click **"Add Variable"** and enter:
-      - Variable name: `GITHUB_TOKEN`
-      - Value: (Paste your GitHub token here)
-   e) Click **Save**.
-   f) IMPORTANT: You must trigger one new deployment (e.g. push a dummy change
-      to git) for the token to take effect.
-
-3. CONFIGURE ADMIN PANEL:
+2. CONFIGURE ADMIN PANEL:
    a) Open your admin panel → Site Settings.
-   b) Enter: GitHub username (Owner), Repository name, and Branch (main).
-   c) Click "Save Settings".
+   b) Enter: GitHub Token, username (Owner), Repository name, and Branch (main).
+   c) Click **"Connect & Run Diagnostics"**.
+
+3. THE DIAGNOSTIC CONSOLE:
+   If the connection fails (e.g., 404 error), the **Diagnostic Console** in the 
+   Admin Panel will show you exactly which field is wrong. It verifies your 
+   token, repository, branch, and folder path step-by-step.
 
 After this, every diary save, edit, delete, and settings change will
 automatically commit to your GitHub repo. Cloudflare Pages deploys in ~30s.
