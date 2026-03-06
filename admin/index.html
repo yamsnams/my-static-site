@@ -1393,24 +1393,24 @@
             if (btn) btn.textContent = 'Testing connection...';
             try {
                 // 1. Test the connection to the repo
-                const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                const repoRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
 
                 if (!repoRes.ok) {
                     if (repoRes.status === 404) throw new Error('Repository not found. Check owner and repo names.');
-                    if (repoRes.status === 401) throw new Error('Invalid GitHub token.');
+                    if (repoRes.status === 401) throw new Error('Invalid GitHub token. Ensure it has "repo" scope.');
                     throw new Error(`GitHub Repo Error: ${repoRes.status}`);
                 }
 
                 const repoData = await repoRes.json();
                 if (!repoData.permissions || !repoData.permissions.push) {
-                    throw new Error('Token does not have push access to this repository. Check scopes (must have "repo").');
+                    throw new Error('Token lacks push permission. Edit token scopes in GitHub Settings.');
                 }
 
                 // 2. Test the branch exists
-                const branchRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${branch}`, {
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                const branchRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
                 if (!branchRes.ok) {
                     if (branchRes.status === 404) throw new Error(`Branch "${branch}" not found in this repository.`);
@@ -1442,18 +1442,18 @@
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
             try {
-                const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+                const apiBase = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}`;
                 const headers = {
-                    'Authorization': `token ${token}`,
+                    'Authorization': `Bearer ${token}`,
                     'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 };
                 let sha = null;
                 try {
                     // GitHub API requires cache-busting to get the latest SHA, otherwise it fails with 409 Conflict
-                    const res = await fetch(`${apiBase}?ref=${branch}&t=${Date.now()}`, { headers });
+                    const res = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
                     if (res.ok) { const d = await res.json(); sha = d.sha; }
-                } catch (e) { console.warn("Could not fetch existing file SHA", e); }
+                } catch (e) { console.warn("SHA fetch fail", e); }
 
                 // Safe UTF-8 to Base64 encoding
                 const jsonStr = JSON.stringify(data, null, 2);
@@ -1468,11 +1468,11 @@
                     toast('Saved to GitHub! Site updates in ~30s.', 'success');
                 } else {
                     const err = await res.json();
-                    let errMsg = err.message || 'GitHub API error';
-                    if (res.status === 404) errMsg = "Branch or Repo not found. Check configuration in Site Settings.";
-                    if (res.status === 401) errMsg = "Invalid token or expired. Reconnect in Site Settings.";
-                    if (res.status === 422) errMsg = "SHA Mismatch. This happens if the file was changed elsewhere. Refresh and try again.";
-                    throw new Error(errMsg);
+                    let errMsg = err.message || 'Error';
+                    if (res.status === 404) errMsg = `404: Path/Branch invalid. Using branch: ${branch}`;
+                    if (res.status === 401) errMsg = "401: Token invalid or expired.";
+                    if (res.status === 422) errMsg = "422: SHA Mismatch or File Locked.";
+                    throw new Error(`GitHub Error ${res.status}: ${errMsg}`);
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
