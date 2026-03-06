@@ -1480,10 +1480,12 @@
                 return;
             }
 
-            let fullPath = path;
-            if (root) fullPath = root + '/' + path;
+            // Reinforce Path
+            let fullPath = path.replace(/^\//, '');
+            if (root) fullPath = root.replace(/\/+$/, '') + '/' + fullPath;
             fullPath = fullPath.replace(/\/+/g, '/');
 
+            logDiag(`--- Saving: ${fullPath} ---`);
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
 
@@ -1496,14 +1498,19 @@
                 };
 
                 // 1. Get SHA
+                logDiag(`Fetching SHA for ${fullPath}...`);
                 let sha = null;
-                const checkRes = await fetch(`${apiBase}?ref=${branch}&t=${Date.now()}`, { headers });
+                const checkRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
                 if (checkRes.ok) {
                     const d = await checkRes.json();
                     sha = d.sha;
+                    logDiag(`SHA found: ${sha.substring(0, 7)}`);
+                } else {
+                    logDiag(`File not found or new. Status: ${checkRes.status}`);
                 }
 
                 // 2. Push
+                logDiag(`Pushing update to GitHub...`);
                 const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
                 const body = { message: `[Admin] ${message}`, content, branch };
@@ -1513,9 +1520,11 @@
                 if (res.ok) {
                     if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                     toast('Saved to GitHub!', 'success');
+                    logDiag(`SUCCESS: File committed.`);
                 } else {
                     const errJson = await res.json();
-                    throw new Error(errJson.message || 'Error');
+                    logDiag(`FAIL: ${errJson.message}`, true);
+                    throw new Error(errJson.message || 'GitHub Error');
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
