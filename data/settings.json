@@ -1,21 +1,21 @@
 {
-  "site_title": "Yaadgah",
-  "hero_title": "Yaadgah — Landing",
-  "diary_title": "Yaadgah— Diary",
-  "submit_title": "Yaadgah — Submit",
-  "footer_copy": "© 2026 Yaadgah",
-  "terms_link": "#",
-  "terms_label": "About",
-  "social_links": [
-    {
-      "name": "Social 1",
-      "icon": "assets/icon-social-1.svg",
-      "url": "#"
-    },
-    {
-      "name": "Social 2",
-      "icon": "assets/icon-social-2.svg",
-      "url": "#"
-    }
-  ]
+    "site_title": "Your Brand",
+    "hero_title": "Your Brand — Landing",
+    "diary_title": "Your Brand — Diary",
+    "submit_title": "Your Brand — Submit",
+    "footer_copy": "© 2026 Your Brand",
+    "terms_link": "#",
+    "terms_label": "Terms and Policies",
+    "social_links": [
+        {
+            "name": "Social 1",
+            "icon": "assets/icon-social-1.svg",
+            "url": "#"
+        },
+        {
+            "name": "Social 2",
+            "icon": "assets/icon-social-2.svg",
+            "url": "#"
+        }
+    ]
 }

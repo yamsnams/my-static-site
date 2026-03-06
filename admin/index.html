@@ -16,10 +16,10 @@
 
         :root {
             --bg: #0a0a0a;
-            --surface: #141414;
-            --surface2: #1e1e1e;
-            --surface3: #282828;
-            --border: #2a2a2a;
+            --surface: rgba(20, 20, 20, 0.7);
+            --surface2: rgba(30, 30, 30, 0.6);
+            --surface3: rgba(40, 40, 40, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
             --accent: #e8e0d5;
             --accent2: #c8bfb5;
             --text: #f0ece8;
@@ -29,9 +29,10 @@
             --red: #f87171;
             --blue: #60a5fa;
             --yellow: #fbbf24;
-            --radius: 10px;
-            --sidebar-w: 220px;
-            --header-h: 56px;
+            --radius: 12px;
+            --sidebar-w: 240px;
+            --header-h: 64px;
+            --glass: blur(12px) saturate(180%);
         }
 
         body {
@@ -54,6 +55,8 @@
             width: var(--sidebar-w);
             background: var(--surface);
             border-right: 1px solid var(--border);
+            backdrop-filter: var(--glass);
+            -webkit-backdrop-filter: var(--glass);
             position: fixed;
             top: 0;
             left: 0;
@@ -223,6 +226,8 @@
             height: var(--header-h);
             background: var(--surface);
             border-bottom: 1px solid var(--border);
+            backdrop-filter: var(--glass);
+            -webkit-backdrop-filter: var(--glass);
             display: flex;
             align-items: center;
             padding: 0 28px;
@@ -447,11 +452,13 @@
             display: flex;
             align-items: flex-start;
             gap: 14px;
-            transition: border-color 0.15s;
+            transition: border-color 0.15s, transform 0.15s;
+            backdrop-filter: var(--glass);
         }
 
         .entry-card:hover {
             border-color: var(--accent2);
+            transform: translateY(-2px);
         }
 
         .entry-thumb {
@@ -540,14 +547,17 @@
         .modal {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 18px;
+            backdrop-filter: var(--glass);
+            border-radius: 24px;
             padding: 28px 28px 24px;
             width: 100%;
-            max-width: 560px;
+            max-width: 900px;
             max-height: 90vh;
             overflow-y: auto;
             transform: scale(0.97);
             transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
         }
 
         .modal-overlay.open .modal {
@@ -584,6 +594,63 @@
             justify-content: flex-end;
             gap: 10px;
             margin-top: 24px;
+        }
+
+        /* ─── Preview Pane ─── */
+        .modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .preview-pane {
+            background: #fff;
+            color: #000;
+            border-radius: 12px;
+            padding: 24px;
+            font-family: serif;
+            overflow-y: auto;
+            max-height: 100%;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .preview-entry {
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .preview-img {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            object-fit: contain;
+        }
+
+        .preview-author {
+            font-style: italic;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #444;
+        }
+
+        .preview-text {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+
+        .preview-date {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
         /* ─── Toast ─── */
@@ -757,33 +824,77 @@
     <div class="modal-overlay" id="entryModal">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title" id="modalTitle">New Diary Entry</span>
+                <span class="modal-title" id="modalTitle">Edit Diary Entry</span>
                 <button class="modal-close" onclick="closeModal('entryModal')">✕</button>
             </div>
-            <div class="form-group">
-                <label>Author</label>
-                <input type="text" id="m-author" placeholder="Author name or Anonymous">
-            </div>
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" id="m-date">
-            </div>
-            <div class="form-group">
-                <label>Entry Text</label>
-                <textarea id="m-text" rows="5" placeholder="Write the diary entry…"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Illustration</label>
-                <select id="m-image">
-                    <option value="">None</option>
-                </select>
-                <p style="font-size:0.7rem; color:var(--muted); margin-top:4px;">Upload new illustrations in the <span
-                        style="color:var(--accent2); cursor:pointer;"
-                        onclick="closeModal('entryModal'); navToPage('assets')">Assets tab</span>.</p>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="form-group">
+                        <label>Author</label>
+                        <input type="text" id="m-author" placeholder="Author name" oninput="updatePreview('entry')">
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="m-date" oninput="updatePreview('entry')">
+                    </div>
+                    <div class="form-group">
+                        <label>Entry Text</label>
+                        <textarea id="m-text" rows="8" placeholder="Write the diary entry…"
+                            oninput="updatePreview('entry')"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Illustration</label>
+                        <select id="m-image" onchange="updatePreview('entry')">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="preview-pane">
+                    <div class="preview-entry" id="entry-preview-content">
+                        <!-- Preview content injected here -->
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" onclick="closeModal('entryModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+                <button class="btn btn-primary" onclick="saveEntry()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div class="modal-overlay" id="approvalModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Approve & Publish Submission</span>
+                <button class="modal-close" onclick="closeModal('approvalModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="form-group">
+                        <label>Author</label>
+                        <input type="text" id="ap-author" oninput="updatePreview('approval')">
+                    </div>
+                    <div class="form-group">
+                        <label>Entry Text</label>
+                        <textarea id="ap-text" rows="8" oninput="updatePreview('approval')"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Illustration</label>
+                        <select id="ap-image" onchange="updatePreview('approval')">
+                            <!-- Assets populated here -->
+                        </select>
+                    </div>
+                </div>
+                <div class="preview-pane">
+                    <div class="preview-entry" id="approval-preview-content">
+                        <!-- Preview content injected here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('approvalModal')">Cancel</button>
+                <button class="btn btn-primary" id="final-approve-btn">Publish to Diary</button>
             </div>
         </div>
     </div>
@@ -1310,8 +1421,9 @@
             document.getElementById('m-author').value = '';
             document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('m-text').value = '';
-            document.getElementById('m-image').value = 'assets/illustration-left.svg';
+            document.getElementById('m-image').value = ASSETS.length > 0 ? ASSETS[0].path : '';
             openModal('entryModal');
+            updatePreview('entry');
         }
 
         function editEntry(i) {
@@ -1323,6 +1435,27 @@
             document.getElementById('m-text').value = e.text || '';
             document.getElementById('m-image').value = e.image || '';
             openModal('entryModal');
+            updatePreview('entry');
+        }
+
+        function updatePreview(type) {
+            const prefix = type === 'entry' ? 'm' : 'ap';
+            const author = document.getElementById(`${prefix}-author`).value || 'Anonymous';
+            const text = document.getElementById(`${prefix}-text`).value || 'Write your entry...';
+            const imagePath = document.getElementById(`${prefix}-image`).value;
+            const dateInput = document.getElementById(`${prefix}-date`);
+            const dateStr = dateInput ? (dateInput.value ? new Date(dateInput.value).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '') : new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            const asset = ASSETS.find(a => a.path === imagePath);
+            const imgSrc = asset ? asset.download_url : '../' + imagePath;
+
+            const html = `
+                <img class="preview-img" src="${imgSrc}" onerror="this.style.display='none'">
+                <div class="preview-author">${author}</div>
+                <div class="preview-text">${text}</div>
+                <div class="preview-date">${dateStr}</div>
+            `;
+            document.getElementById(`${type}-preview-content`).innerHTML = html;
         }
 
         function saveEntry() {
@@ -1391,12 +1524,21 @@
         }
 
         function updateAssetSelectors() {
-            const select = document.getElementById('m-image');
-            if (!select) return;
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">None</option>' +
+            const mSelect = document.getElementById('m-image');
+            const apSelect = document.getElementById('ap-image');
+            const assetOptions = '<option value="">None</option>' +
                 ASSETS.map(a => `<option value="${a.path}">${a.name}</option>`).join('');
-            select.value = currentVal;
+
+            if (mSelect) {
+                const currentVal = mSelect.value;
+                mSelect.innerHTML = assetOptions;
+                mSelect.value = currentVal;
+            }
+            if (apSelect) {
+                const currentVal = apSelect.value;
+                apSelect.innerHTML = assetOptions;
+                apSelect.value = currentVal;
+            }
         }
 
         async function handleAssetUpload(e) {
@@ -1501,21 +1643,45 @@
 
         async function approveSubmission(i) {
             const s = SUBMISSIONS[i];
-            const entry = {
-                author: s.author || 'Anonymous',
-                date: new Date().toISOString().split('T')[0],
-                text: s.text || '',
-                image: 'assets/illustration-left.svg'
-            };
-            ENTRIES.unshift(entry);
-            SUBMISSIONS.splice(i, 1);
 
-            toast('Publishing entry…', 'info');
-            await pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Publish submission');
-            await saveSubmissions();
-            renderEntries();
-            renderSubmissions();
-            updateBadge();
+            // Populate Approval Modal
+            document.getElementById('ap-author').value = s.author || 'Anonymous';
+            document.getElementById('ap-text').value = s.text || '';
+
+            // Populate Asset Selector
+            const select = document.getElementById('ap-image');
+            select.innerHTML = ASSETS.map(a => `<option value="${a.path}">${a.name}</option>`).join('');
+            // Randomly select one as default
+            if (ASSETS.length > 0) {
+                const randomIdx = Math.floor(Math.random() * ASSETS.length);
+                select.value = ASSETS[randomIdx].path;
+            }
+
+            updatePreview('approval');
+            openModal('approvalModal');
+
+            // Set up final publish button
+            document.getElementById('final-approve-btn').onclick = async () => {
+                const entry = {
+                    author: document.getElementById('ap-author').value.trim() || 'Anonymous',
+                    date: new Date().toISOString().split('T')[0],
+                    text: document.getElementById('ap-text').value.trim(),
+                    image: document.getElementById('ap-image').value
+                };
+
+                if (!entry.text) { toast('Text is required.', 'error'); return; }
+
+                ENTRIES.unshift(entry);
+                SUBMISSIONS.splice(i, 1);
+
+                closeModal('approvalModal');
+                toast('Publishing entry…', 'info');
+                await pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Publish submission');
+                await saveSubmissions();
+                renderEntries();
+                renderSubmissions();
+                updateBadge();
+            };
         }
 
         async function deleteSubmission(i) {
