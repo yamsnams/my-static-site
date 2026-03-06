@@ -1,23 +1,22 @@
-[
-  {
-    "id": "entry-1710000001",
-    "author": "Anonymous Soul",
-    "text": "The fog settled over the valley this morning like a heavy velvet blanket. I watched from the window as the trees slowly dissolved into grey silhouettes, thinking about how some things are better left obscured. There is a strange comfort in not seeing the horizon clearly; it makes the immediate world feel more intimate, more mine.",
-    "image": "assets/illustration-left.svg",
-    "date": "2026-03-06"
-  },
-  {
-    "id": "entry-1710000002",
-    "author": "The Midnight Wanderer",
-    "text": "Found a pressed wildflower between the pages of a book I haven't opened in years. The scent was gone, but the color—a faded indigo—still held the ghost of that summer evening by the lake. Time doesn't really pass, does it? It just folds inward, layer upon layer, until we're walking on top of our own memories.",
-    "image": "assets/illustration-right.svg",
-    "date": "2026-03-05"
-  },
-  {
-    "id": "entry-1710000003",
-    "author": "Kashmir Dreamer",
-    "text": "There's a rhythm to the rain on the tin roof that no orchestra could ever replicate. It's a messy, beautiful syncopation that sounds like home. I spent the afternoon sketching the way the light catches the puddles in the courtyard, trying to capture that fleeting moment of silver before the sun hides again.",
-    "image": "assets/ornament-hanging.svg",
-    "date": "2026-03-04"
-  }
-]
+{
+  "entries": [
+    {
+      "author": "Anonymous Soul",
+      "text": "The fog settled over the valley this morning like a heavy velvet blanket. I watched from the window as the trees slowly dissolved into grey silhouettes, thinking about how some things are better left obscured. There is a strange comfort in not seeing the horizon clearly; it makes the immediate world feel more intimate, more mine.",
+      "image": "assets/illustration-left.svg",
+      "date": "2026-03-06"
+    },
+    {
+      "author": "The Midnight Wanderer",
+      "text": "Found a pressed wildflower between the pages of a book I haven't opened in years. The scent was gone, but the color—a faded indigo—still held the ghost of that summer evening by the lake. Time doesn't really pass, does it? It just folds inward, layer upon layer, until we're walking on top of our own memories.",
+      "image": "assets/illustration-right.svg",
+      "date": "2026-03-05"
+    },
+    {
+      "author": "Kashmir Dreamer",
+      "text": "There's a rhythm to the rain on the tin roof that no orchestra could ever replicate. It's a messy, beautiful syncopation that sounds like home. I spent the afternoon sketching the way the light catches the puddles in the courtyard, trying to capture that fleeting moment of silver before the sun hides again.",
+      "image": "assets/ornament-hanging.svg",
+      "date": "2026-03-04"
+    }
+  ]
+}

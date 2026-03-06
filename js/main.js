@@ -67,19 +67,19 @@
         try {
             const response = await fetch('data/entries.json');
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            const data = await response.json();
+            // CMS File Collection returns an object with an 'entries' array
+            return data.entries || [];
         } catch (error) {
             console.warn('Unable to fetch diary entries (likely local file protocol). Using fallback content.', error);
             // Fallback content for local file:// usage
             return [
                 {
-                    "id": "fallback-1",
                     "author": "Anonymous Soul",
                     "text": "The fog settled over the valley this morning like a heavy velvet blanket...",
                     "image": "assets/illustration-left.svg"
                 },
                 {
-                    "id": "fallback-2",
                     "author": "The Midnight Wanderer",
                     "text": "Found a pressed wildflower between the pages of a book I haven't opened in years...",
                     "image": "assets/illustration-right.svg"
@@ -96,7 +96,7 @@
         container.innerHTML = '';
         nav.innerHTML = '';
 
-        if (entries.length === 0) {
+        if (!Array.isArray(entries) || entries.length === 0) {
             container.innerHTML = '<div class="diary-empty"><p>No entries found. If you are viewing this locally, please use a local server (e.g., Live Server) to see dynamic content.</p></div>';
             return;
         }
