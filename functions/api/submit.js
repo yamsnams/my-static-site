@@ -58,78 +58,83 @@ export async function onRequestPost(context) {
             sha = fileData.sha;
             if (fileData.content) {
                 try {
-                    // Aggressively strip everything NOT in the base64 alphabet
-                    const cleaned = fileData.content.replace(/[^A-Za-z0-9+/=]/g, "");
-                    const binaryString = atob(cleaned);
-                    const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
-                    const decoded = new TextDecoder().decode(bytes);
-                    const json = JSON.parse(decoded);
-                    submissions = json.submissions || [];
-                } catch (e) {
-                    return new Response(JSON.stringify({
-                        error: "Decoding Error",
-                        detail: e.message,
-                        length: fileData.content?.length,
-                        preview: fileData.content?.substring(0, 30)
-                    }), {
-                        status: 500,
-                        headers: { "Content-Type": "application/json" }
-                    });
+                    try {
+                        // 1. Aggressively strip everything NOT in the base64 alphabet
+                        let cleaned = fileData.content.replace(/[^A-Za-z0-9+/=]/g, "");
+                        // 2. Add padding if missing (atob is strict about this)
+                        while (cleaned.length % 4 !== 0) cleaned += "=";
+
+                        const binaryString = atob(cleaned);
+                        const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+                        const decoded = new TextDecoder().decode(bytes);
+                        const json = JSON.parse(decoded);
+                        submissions = json.submissions || [];
+                    } catch (e) {
+                        return new Response(JSON.stringify({
+                            error: "[API-NEW] Decoding Error",
+                            detail: e.message,
+                            length: fileData.content?.length,
+                            preview: fileData.content?.substring(0, 30),
+                            timestamp: new Date().toISOString()
+                        }), {
+                            status: 500,
+                            headers: { "Content-Type": "application/json" }
+                        });
+                    }
                 }
-            }
         }
 
-        // 2. Add new submission at the top
-        submissions.unshift(submission);
+            // 2. Add new submission at the top
+            submissions.unshift(submission);
 
-        // 3. Push back to GitHub
-        let content;
-        try {
-            const bytes = new TextEncoder().encode(JSON.stringify({ submissions }, null, 2));
-            let binary = "";
-            for (let i = 0; i < bytes.byteLength; i++) {
-                binary += String.fromCharCode(bytes[i]);
+            // 3. Push back to GitHub
+            let content;
+            try {
+                const bytes = new TextEncoder().encode(JSON.stringify({ submissions }, null, 2));
+                let binary = "";
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                content = btoa(binary);
+            } catch (e) {
+                return new Response(JSON.stringify({ error: "Encoding Error", detail: e.message }), {
+                    status: 500,
+                    headers: { "Content-Type": "application/json" }
+                });
             }
-            content = btoa(binary);
-        } catch (e) {
-            return new Response(JSON.stringify({ error: "Encoding Error", detail: e.message }), {
+
+            const putRes = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${GH_TOKEN}`,
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'Cloudflare-Pages-Function'
+                },
+                body: JSON.stringify({
+                    message: `Add submission from ${submission.author}`,
+                    content: content,
+                    branch: GH_BRANCH,
+                    sha: sha
+                })
+            });
+
+            if (putRes.ok) {
+                return new Response(JSON.stringify({ success: true }), {
+                    status: 200,
+                    headers: { "Content-Type": "application/json" }
+                });
+            } else {
+                const errDetail = await putRes.text();
+                return new Response(JSON.stringify({ error: "GitHub Save Failed", detail: errDetail }), {
+                    status: 502, // Bad Gateway
+                    headers: { "Content-Type": "application/json" }
+                });
+            }
+
+        } catch (err) {
+            return new Response(JSON.stringify({ error: "Internal Server Error", detail: err.message }), {
                 status: 500,
                 headers: { "Content-Type": "application/json" }
             });
         }
-
-        const putRes = await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${GH_TOKEN}`,
-                'Content-Type': 'application/json',
-                'User-Agent': 'Cloudflare-Pages-Function'
-            },
-            body: JSON.stringify({
-                message: `Add submission from ${submission.author}`,
-                content: content,
-                branch: GH_BRANCH,
-                sha: sha
-            })
-        });
-
-        if (putRes.ok) {
-            return new Response(JSON.stringify({ success: true }), {
-                status: 200,
-                headers: { "Content-Type": "application/json" }
-            });
-        } else {
-            const errDetail = await putRes.text();
-            return new Response(JSON.stringify({ error: "GitHub Save Failed", detail: errDetail }), {
-                status: 502, // Bad Gateway
-                headers: { "Content-Type": "application/json" }
-            });
-        }
-
-    } catch (err) {
-        return new Response(JSON.stringify({ error: "Internal Server Error", detail: err.message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" }
-        });
     }
-}

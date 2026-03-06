@@ -73,14 +73,23 @@
                         body: JSON.stringify({ author, text })
                     });
 
+                    const rawText = await res.text();
+                    console.log('Raw Response:', rawText);
+
+                    let result;
+                    try {
+                        result = JSON.parse(rawText);
+                    } catch (e) {
+                        throw new Error('Invalid server response: ' + rawText.substring(0, 100));
+                    }
+
                     if (res.ok) {
                         window.location.href = 'success.html';
                     } else {
-                        const err = await res.json();
-                        throw new Error(err.error || 'Submission failed');
+                        throw new Error(result.error || 'Submission failed');
                     }
                 } catch (err) {
-                    console.error(err);
+                    console.error('Submission Error:', err);
                     alert('Submission failed: ' + err.message + '\n\nPlease try again later.');
                     btn.textContent = 'submit diary';
                     btn.disabled = false;
