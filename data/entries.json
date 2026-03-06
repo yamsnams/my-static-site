@@ -1,6 +1,12 @@
 {
   "entries": [
     {
+      "author": "hello",
+      "date": "2026-03-06",
+      "text": "Bye",
+      "image": "assets/illustration-left.svg"
+    },
+    {
       "author": "Anonymous Soul",
       "text": "The fog settled over the valley this morning like a heavy velvet blanket. I watched from the window as the trees slowly dissolved into grey silhouettes, thinking about how some things are better left obscured. There is a strange comfort in not seeing the horizon clearly; it makes the immediate world feel more intimate, more mine.",
       "image": "assets/illustration-left.svg",
