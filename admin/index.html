@@ -1387,7 +1387,7 @@
         // ─── GitHub API Auto-Push ────────────────────────────────────────
         function getGitHubConfig() {
             return {
-                token: localStorage.getItem('gh_token') || '',
+                token: (localStorage.getItem('gh_token') || '').trim(),
                 owner: (localStorage.getItem('gh_owner') || '').trim(),
                 repo: (localStorage.getItem('gh_repo') || '').trim(),
                 branch: (localStorage.getItem('gh_branch') || 'main').trim(),
@@ -1489,31 +1489,33 @@
             const encodedPath = fullPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
             const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`;
 
-            logDiag(`--- [VER 3.0] Save Start: ${fullPath} ---`);
+            logDiag(`--- [VER 3.1] Forensic Start: ${fullPath} ---`);
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
 
             try {
                 const headers = {
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
                     'Content-Type': 'application/json'
                 };
 
                 // 1. Get SHA
-                logDiag(`GET SHA: ${apiBase.split('repos/')[1]} (Branch: ${branch})`);
+                logDiag(`Forensic GET: ${apiBase}`);
                 let sha = null;
                 const checkRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
                 if (checkRes.ok) {
                     const d = await checkRes.json();
                     sha = d.sha;
-                    logDiag(`SHA Match: ${sha.substring(0, 7)}`);
+                    logDiag(`Forensic SHA: ${sha.substring(0, 7)}`);
                 } else {
-                    logDiag(`Path Status: ${checkRes.status} (New file?)`);
+                    logDiag(`Forensic Status: ${checkRes.status}`);
                 }
 
                 // 2. Push
-                logDiag(`PUT Commit: Target Branch "${branch}"...`);
+                logDiag(`Forensic PUT: Committing to ${branch}...`);
+                logDiag(`Final URL: ${apiBase}`);
                 const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
                 const body = { message: `[Admin] ${message}`, content, branch: branch.trim() };
@@ -1523,7 +1525,7 @@
                 if (res.ok) {
                     if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                     toast('Saved to GitHub!', 'success');
-                    logDiag(`✓ SUCCESS: Committed to ${branch}.`);
+                    logDiag(`✓ SUCCESS: 200 OK.`);
                 } else {
                     const errStatus = res.status;
                     const errJson = await res.json().catch(() => ({ message: 'Could not parse error JSON' }));
