@@ -1427,39 +1427,43 @@
                 // 1. Check Token validity & Scopes
                 logDiag(`Verifying token permissions...`);
                 const userRes = await fetch('https://api.github.com/user', { headers });
-                
+
                 // Inspect scopes
                 const scopes = userRes.headers.get('X-OAuth-Scopes') || 'none';
                 logDiag(`Token Scopes: [${scopes}]`);
-                
+
                 if (!userRes.ok) throw new Error(`Token invalid (${userRes.status}).`);
                 const userData = await userRes.json();
                 logDiag(`Authenticated as: ${userData.login}`);
-                
+
                 if (!scopes.includes('repo')) {
-                    logDiag(`⚠ WARNING: Token lacks "repo" scope. Write operations will fail with 404.`, true);
+                    logDiag(`--------------------------------------------`, true);
+                    logDiag(`🚨 CRITICAL ERROR: YOUR TOKEN HAS NO PERMISSIONS!`, true);
+                    logDiag(`GitHub reports scopes: [${scopes}]`, true);
+                    logDiag(`You MUST check the "repo" box when creating your token.`, true);
+                    logDiag(`Create a new one at: github.com/settings/tokens`, true);
+                    logDiag(`--------------------------------------------`, true);
+                    throw new Error('Token lacks "repo" scope.');
                 }
 
                 // 2. Check Repository
-                logDiag(`Locating repository: ${owner}/${repo}...`);
+                logDiag(`Locating repository...`);
                 const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
                 if (!repoRes.ok) throw new Error(`Repo not found (${repoRes.status}). Check Owner/Repo.`);
-                const repoData = await repoRes.json();
-                logDiag(`Repo found. Push permission: ${repoData.permissions.push}`);
-                if (!repoData.permissions.push) throw new Error('Token lacks push permission.');
+                logDiag(`✓ Repository found and accessible.`);
 
                 // 3. Check Branch
-                logDiag(`Checking branch: ${branch}...`);
+                logDiag(`Verifying branch: ${branch}...`);
                 const branchRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${branch}`, { headers });
                 if (!branchRes.ok) throw new Error(`Branch "${branch}" not found (404).`);
-                logDiag(`Branch verified.`);
+                logDiag(`✓ Branch verified.`);
 
                 // 4. Check Path
                 const testPath = root ? `${root}/data/entries.json`.replace(/\/+/g, '/') : 'data/entries.json';
-                logDiag(`Testing file path access: ${testPath}...`);
+                logDiag(`Checking path existence: ${testPath}...`);
                 const pathRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${testPath}?ref=${branch}`, { headers });
                 if (!pathRes.ok) throw new Error(`Path Error: Could not find "${testPath}".`);
-                logDiag(`Path verified. Test connection SUCCESSFUL.`);
+                logDiag(`✓ Path verified. SYSTEM READY FOR SAVING.`);
 
                 // Save
                 localStorage.setItem('gh_token', token);
@@ -1489,18 +1493,17 @@
                 return;
             }
 
-            // [VER 3.0] Reinforce Path & Encoding
+            // [VER 3.2] Final Production Ready
             let fullPath = path.replace(/^\//, '');
             if (root) fullPath = root.replace(/\/+$/, '') + '/' + fullPath;
             fullPath = fullPath.replace(/\/+/g, '/');
 
-            // Encode each segment of the path
             const encodedPath = fullPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
             const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`;
 
-            logDiag(`--- [VER 3.1] Forensic Start: ${fullPath} ---`);
+            logDiag(`--- Auto-Save Started: ${fullPath} ---`);
             const indicator = document.getElementById('save-indicator');
-            if (indicator) indicator.textContent = '⏳ Saving…';
+            if (indicator) indicator.textContent = '⏳ Saving to GitHub…';
 
             try {
                 const headers = {
@@ -1511,40 +1514,37 @@
                 };
 
                 // 1. Get SHA
-                logDiag(`Forensic GET: ${apiBase}`);
                 let sha = null;
                 const checkRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
                 if (checkRes.ok) {
                     const d = await checkRes.json();
                     sha = d.sha;
-                    logDiag(`Forensic SHA: ${sha.substring(0, 7)}`);
-                } else {
-                    logDiag(`Forensic Status: ${checkRes.status}`);
                 }
 
                 // 2. Push
-                logDiag(`Forensic PUT: Committing to ${branch}...`);
-                logDiag(`Final URL: ${apiBase}`);
                 const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
-                const body = { message: `[Admin] ${message}`, content, branch: branch.trim() };
+                const bName = branch.trim();
+                const body = { message: `[Admin] ${message}`, content, branch: bName };
                 if (sha) body.sha = sha;
 
                 const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
+
                 if (res.ok) {
-                    if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
+                    if (indicator) { indicator.textContent = '✓ Saved to GitHub'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                     toast('Saved to GitHub!', 'success');
-                    logDiag(`✓ SUCCESS: 200 OK.`);
+                    logDiag(`✓ SUCCESS: ${fullPath} updated.`);
                 } else {
                     const errStatus = res.status;
-                    const errJson = await res.json().catch(() => ({ message: 'Could not parse error JSON' }));
+                    const errJson = await res.json().catch(() => ({ message: 'Could not parse error' }));
                     logDiag(`❌ FAIL ${errStatus}: ${errJson.message}`, true);
+                    if (errStatus === 404) logDiag(`💡 Note: 404 during save is usually due to missing "repo" scope on your token.`, true);
                     throw new Error(errJson.message || `HTTP ${errStatus}`);
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                 toast('GitHub Error: ' + err.message, 'error');
-                logDiag(`CRITICAL: ${err.message}`, true);
+                logDiag(`CRITICAL Error: ${err.message}`, true);
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
             }
         }
