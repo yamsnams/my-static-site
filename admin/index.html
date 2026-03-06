@@ -1380,11 +1380,11 @@
         // ─── GitHub API Auto-Push ────────────────────────────────────────
         function getGitHubConfig() {
             return {
-                token: localStorage.getItem('gh_token'),
-                owner: localStorage.getItem('gh_owner'),
-                repo: localStorage.getItem('gh_repo'),
-                branch: localStorage.getItem('gh_branch') || 'main',
-                root: localStorage.getItem('gh_path') || ''
+                token: localStorage.getItem('gh_token') || '',
+                owner: (localStorage.getItem('gh_owner') || '').trim(),
+                repo: (localStorage.getItem('gh_repo') || '').trim(),
+                branch: (localStorage.getItem('gh_branch') || 'main').trim(),
+                root: (localStorage.getItem('gh_path') || '').trim().replace(/^\/+|\/+$/g, '')
             };
         }
 
@@ -1445,12 +1445,18 @@
             const { token, owner, repo, branch, root } = getGitHubConfig();
             if (!token || !owner || !repo) {
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
-                toast('GitHub not set up — file downloaded. Go to Settings to connect GitHub.', 'error');
+                toast('GitHub credentials missing. Please reconnect in Settings.', 'error');
                 return;
             }
-            const fullPath = root ? `${root}/${path}` : path;
+
+            // Construct final path: repo-root + folder-root + file-path
+            let fullPath = path;
+            if (root) fullPath = root + '/' + path;
+            fullPath = fullPath.replace(/\/+/g, '/'); // ensure no double slashes
+
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
+
             try {
                 const apiBase = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${fullPath}`;
                 const headers = {
@@ -1458,35 +1464,59 @@
                     'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 };
+
+                // 1. Get current file SHA (with cache busting)
                 let sha = null;
                 try {
-                    // GitHub API requires cache-busting to get the latest SHA, otherwise it fails with 409 Conflict
-                    const res = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
-                    if (res.ok) { const d = await res.json(); sha = d.sha; }
-                } catch (e) { console.warn("SHA fetch fail", e); }
+                    const checkUrl = `${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`;
+                    const res = await fetch(checkUrl, { headers });
+                    if (res.ok) {
+                        const d = await res.json();
+                        sha = d.sha;
+                    } else if (res.status === 404) {
+                        console.warn(`File not found at ${fullPath}. Will attempt to create new file.`);
+                    }
+                } catch (e) { console.warn("SHA fetch failed", e); }
 
-                // Safe UTF-8 to Base64 encoding
-                const jsonStr = JSON.stringify(data, null, 2);
-                const bytes = new TextEncoder().encode(jsonStr);
+                // 2. Prepare Payload
+                const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
-
-                const body = { message: `[Admin] ${message}`, content, branch };
+                const body = {
+                    message: `[Admin] ${message}`,
+                    content,
+                    branch: branch
+                };
                 if (sha) body.sha = sha;
-                const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
-                if (res.ok) {
+
+                // 3. Push to GitHub
+                const pushRes = await fetch(apiBase, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (pushRes.ok) {
                     if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
-                    toast('Saved to GitHub! Site updates in ~30s.', 'success');
+                    toast('Saved to GitHub successfully!', 'success');
                 } else {
-                    const err = await res.json();
-                    let errMsg = err.message || 'Error';
-                    if (res.status === 404) errMsg = `404: Path/Branch invalid. Using branch: ${branch}`;
-                    if (res.status === 401) errMsg = "401: Token invalid or expired.";
-                    if (res.status === 422) errMsg = "422: SHA Mismatch or File Locked.";
-                    throw new Error(`GitHub Error ${res.status}: ${errMsg}`);
+                    const errData = await pushRes.json();
+                    const status = pushRes.status;
+                    let detail = errData.message || 'Unknown error';
+
+                    if (status === 404) {
+                        detail = `404 Not Found. Target: ${owner}/${repo} at branch [${branch}]. File path: [${fullPath}]. Check your branch/repo names in Settings!`;
+                    } else if (status === 401) {
+                        detail = "401 Unauthorized. Your token might be invalid or expired.";
+                    } else if (status === 422) {
+                        detail = "422 Unprocessable. This usually means a SHA mismatch (refresh the page and try again).";
+                    }
+
+                    throw new Error(detail);
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
-                toast('GitHub save failed: ' + err.message, 'error');
+                toast(err.message, 'error');
+                console.error("GitHub Push Error Detail:", err);
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
             }
         }
