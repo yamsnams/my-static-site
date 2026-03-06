@@ -80,7 +80,7 @@
                     try {
                         result = JSON.parse(rawText);
                     } catch (e) {
-                        throw new Error('Invalid server response: ' + rawText.substring(0, 100));
+                        throw new Error(`Invalid server response (${res.status}): ` + rawText.substring(0, 100));
                     }
 
                     if (res.ok) {
