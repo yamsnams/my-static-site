@@ -33,30 +33,47 @@
     function applySettings(settings) {
         if (!settings) return;
 
-        // Update Title
+        // Update page <title> using page-specific or site title
+        const path = window.location.pathname;
         if (settings.site_title) {
-            document.title = `${settings.site_title} — ${document.title.split(' — ')[1] || ''}`;
-            const branding = document.querySelector('.brand-logo');
-            if (branding) branding.alt = settings.site_title;
+            if (path.includes('diary') && settings.diary_title) {
+                document.title = settings.diary_title;
+            } else if (path.includes('submit') && settings.submit_title) {
+                document.title = settings.submit_title;
+            } else if (path.includes('success') && settings.submit_title) {
+                document.title = settings.submit_title.replace('Submit', 'Success');
+            } else if (settings.hero_title) {
+                document.title = settings.hero_title;
+            } else {
+                document.title = settings.site_title;
+            }
         }
 
-        // Update Footer
+        // Update brand logo alt text
+        const branding = document.querySelector('.brand-logo');
+        if (branding && settings.site_title) branding.alt = settings.site_title;
+
+        // Update Footer copyright
         const copyright = document.querySelector('.footer-left span');
-        if (copyright) copyright.textContent = settings.footer_copy;
+        if (copyright && settings.footer_copy) copyright.textContent = settings.footer_copy;
 
+        // Update Terms link
         const terms = document.querySelector('.footer-right a');
-        if (terms) terms.href = settings.terms_link;
+        if (terms) {
+            if (settings.terms_link) terms.href = settings.terms_link;
+            if (settings.terms_label) terms.textContent = settings.terms_label;
+        }
 
-        // Manage Social Icons (if collection exists)
+        // Update Social Icons
         const socialWrap = document.querySelector('.social-icons');
-        if (socialWrap && settings.social_links) {
+        if (socialWrap && settings.social_links && settings.social_links.length > 0) {
             socialWrap.innerHTML = '';
             settings.social_links.forEach(link => {
                 const a = document.createElement('a');
-                a.href = link.url;
+                a.href = link.url || '#';
                 a.target = '_blank';
                 a.rel = 'noopener noreferrer';
-                a.setAttribute('aria-label', link.name);
+                a.setAttribute('aria-label', link.name || 'Social Link');
                 a.innerHTML = `<img src="${link.icon}" alt="${link.name}">`;
                 socialWrap.appendChild(a);
             });
