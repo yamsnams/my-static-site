@@ -1480,57 +1480,60 @@
                 return;
             }
 
-            // Reinforce Path
+            // [VER 3.0] Reinforce Path & Encoding
             let fullPath = path.replace(/^\//, '');
             if (root) fullPath = root.replace(/\/+$/, '') + '/' + fullPath;
             fullPath = fullPath.replace(/\/+/g, '/');
 
-            logDiag(`--- Saving: ${fullPath} ---`);
+            // Encode each segment of the path
+            const encodedPath = fullPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+            const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`;
+
+            logDiag(`--- [VER 3.0] Save Start: ${fullPath} ---`);
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
 
             try {
-                const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${fullPath}`;
                 const headers = {
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github+json',
-                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 };
 
                 // 1. Get SHA
-                logDiag(`Fetching SHA for ${fullPath} on branch ${branch}...`);
+                logDiag(`GET SHA: ${apiBase.split('repos/')[1]} (Branch: ${branch})`);
                 let sha = null;
                 const checkRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
                 if (checkRes.ok) {
                     const d = await checkRes.json();
                     sha = d.sha;
-                    logDiag(`SHA found: ${sha.substring(0, 7)}`);
+                    logDiag(`SHA Match: ${sha.substring(0, 7)}`);
                 } else {
-                    logDiag(`File status: ${checkRes.status} (New or Missing)`);
+                    logDiag(`Path Status: ${checkRes.status} (New file?)`);
                 }
 
                 // 2. Push
-                logDiag(`Pushing commit to branch: ${branch}...`);
+                logDiag(`PUT Commit: Target Branch "${branch}"...`);
                 const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
                 const content = btoa(String.fromCharCode(...bytes));
-                const body = { message: `[Admin] ${message}`, content, branch };
+                const body = { message: `[Admin] ${message}`, content, branch: branch.trim() };
                 if (sha) body.sha = sha;
 
                 const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
                 if (res.ok) {
                     if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                     toast('Saved to GitHub!', 'success');
-                    logDiag(`SUCCESS: Committed to ${branch}.`);
+                    logDiag(`✓ SUCCESS: Committed to ${branch}.`);
                 } else {
                     const errStatus = res.status;
-                    const errJson = await res.json().catch(() => ({ message: 'Non-JSON Error' }));
-                    logDiag(`FAIL: ${errStatus} - ${errJson.message}`, true);
-                    throw new Error(errJson.message || `Error ${errStatus}`);
+                    const errJson = await res.json().catch(() => ({ message: 'Could not parse error JSON' }));
+                    logDiag(`❌ FAIL ${errStatus}: ${errJson.message}`, true);
+                    throw new Error(errJson.message || `HTTP ${errStatus}`);
                 }
             } catch (err) {
                 if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                 toast('GitHub Error: ' + err.message, 'error');
+                logDiag(`CRITICAL: ${err.message}`, true);
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
             }
         }
