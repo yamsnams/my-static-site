@@ -58,17 +58,19 @@ export async function onRequestPost(context) {
             sha = fileData.sha;
             if (fileData.content) {
                 try {
-                    const normalizedContent = fileData.content.replace(/\s/g, "");
-                    const binaryString = atob(normalizedContent);
-                    const content = Uint8Array.from(binaryString, c => c.charCodeAt(0));
-                    const decoded = new TextDecoder().decode(content);
+                    // Aggressively strip everything NOT in the base64 alphabet
+                    const cleaned = fileData.content.replace(/[^A-Za-z0-9+/=]/g, "");
+                    const binaryString = atob(cleaned);
+                    const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+                    const decoded = new TextDecoder().decode(bytes);
                     const json = JSON.parse(decoded);
                     submissions = json.submissions || [];
                 } catch (e) {
                     return new Response(JSON.stringify({
-                        error: "Content Decoding Failed",
+                        error: "Decoding Error",
                         detail: e.message,
-                        content_slice: fileData.content.substring(0, 50)
+                        length: fileData.content?.length,
+                        preview: fileData.content?.substring(0, 30)
                     }), {
                         status: 500,
                         headers: { "Content-Type": "application/json" }
@@ -81,6 +83,21 @@ export async function onRequestPost(context) {
         submissions.unshift(submission);
 
         // 3. Push back to GitHub
+        let content;
+        try {
+            const bytes = new TextEncoder().encode(JSON.stringify({ submissions }, null, 2));
+            let binary = "";
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            content = btoa(binary);
+        } catch (e) {
+            return new Response(JSON.stringify({ error: "Encoding Error", detail: e.message }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
         const putRes = await fetch(url, {
             method: 'PUT',
             headers: {
@@ -90,7 +107,7 @@ export async function onRequestPost(context) {
             },
             body: JSON.stringify({
                 message: `Add submission from ${submission.author}`,
-                content: btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify({ submissions }, null, 2)))),
+                content: content,
                 branch: GH_BRANCH,
                 sha: sha
             })
@@ -104,13 +121,13 @@ export async function onRequestPost(context) {
         } else {
             const errDetail = await putRes.text();
             return new Response(JSON.stringify({ error: "GitHub Save Failed", detail: errDetail }), {
-                status: 502,
+                status: 502, // Bad Gateway
                 headers: { "Content-Type": "application/json" }
             });
         }
 
     } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), {
+        return new Response(JSON.stringify({ error: "Internal Server Error", detail: err.message }), {
             status: 500,
             headers: { "Content-Type": "application/json" }
         });
