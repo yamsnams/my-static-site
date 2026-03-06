@@ -56,7 +56,8 @@ export async function onRequestPost(context) {
         if (getRes.ok) {
             const fileData = await getRes.json();
             sha = fileData.sha;
-            const content = Uint8Array.from(atob(fileData.content), c => c.charCodeAt(0));
+            // Fix: GitHub returns base64 with newlines which atob() may reject in some environments.
+            const content = Uint8Array.from(atob(fileData.content.replace(/\s/g, "")), c => c.charCodeAt(0));
             const decoded = new TextDecoder().decode(content);
             const json = JSON.parse(decoded);
             submissions = json.submissions || [];
@@ -75,7 +76,7 @@ export async function onRequestPost(context) {
             },
             body: JSON.stringify({
                 message: `Add submission from ${submission.author}`,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify({ submissions }, null, 2)))),
+                content: btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify({ submissions }, null, 2)))),
                 branch: GH_BRANCH,
                 sha: sha
             })
