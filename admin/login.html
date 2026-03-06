@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <style>
         *,
         *::before,
@@ -15,210 +14,220 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --bg: #0f0f0f;
-            --surface: #1a1a1a;
-            --surface2: #242424;
-            --border: #2e2e2e;
-            --accent: #e8e0d5;
-            --accent2: #c8bfb5;
-            --text: #f0ece8;
-            --muted: #888;
-            --radius: 12px;
-        }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #f0ece8;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
+            min-height: 100vh;
         }
 
-        /* Ambient BG */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -40%;
-            left: -20%;
-            width: 60vw;
-            height: 60vw;
-            background: radial-gradient(circle, rgba(232, 224, 213, 0.05) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 48px 40px;
+        .login-container {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 18px;
+            padding: 40px 32px;
             width: 100%;
-            max-width: 400px;
-            position: relative;
-            z-index: 1;
+            max-width: 420px;
+            text-align: center;
+            animation: fadeUp 0.3s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 36px;
-            gap: 12px;
-        }
-
-        .logo-icon {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            border-radius: 14px;
+            background: linear-gradient(135deg, #e8e0d5, #c8bfb5);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 24px;
+            color: #0a0a0a;
+            margin: 0 auto 24px;
         }
 
-        .logo h1 {
-            font-size: 1.3rem;
-            font-weight: 500;
-            color: var(--text);
-            letter-spacing: -0.02em;
-        }
-
-        .logo p {
-            font-size: 0.82rem;
-            color: var(--muted);
-            text-align: center;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--accent);
-            color: #0f0f0f;
-            border: none;
-            border-radius: var(--radius);
-            font-size: 0.95rem;
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
             font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s ease, transform 0.1s ease;
-            letter-spacing: -0.01em;
         }
 
-        .login-btn:hover {
+        p {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.15s;
+            font-family: monospace;
+        }
+
+        input:focus {
+            border-color: #e8e0d5;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: #e8e0d5;
+            color: #0a0a0a;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
             opacity: 0.9;
         }
 
-        .login-btn:active {
-            transform: scale(0.98);
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 24px 0;
-            color: var(--muted);
-            font-size: 0.78rem;
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-top-color: #0a0a0a;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
         }
 
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        .info {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 14px 16px;
+        .error-msg {
+            color: #f87171;
             font-size: 0.8rem;
-            color: var(--muted);
-            line-height: 1.6;
-        }
-
-        .info strong {
-            color: var(--accent2);
-        }
-
-        .status {
-            margin-top: 16px;
-            font-size: 0.82rem;
-            color: var(--muted);
-            text-align: center;
-            min-height: 20px;
-        }
-
-        .status.error {
-            color: #ff6b6b;
-        }
-
-        .status.success {
-            color: #69db7c;
+            margin-top: 12px;
+            display: none;
         }
     </style>
 </head>
 
 <body>
-    <div class="card">
-        <div class="logo">
-            <div class="logo-icon">✦</div>
-            <h1>Admin Access</h1>
-            <p>Sign in with your Netlify Identity credentials<br>to access the dashboard.</p>
+
+    <div class="login-container">
+        <div class="logo">✦</div>
+        <h1>Admin Dashboard</h1>
+        <p>Enter your GitHub Personal Access Token to authenticate. This happens entirely in your browser.</p>
+
+        <div class="form-group">
+            <label>GitHub Token</label>
+            <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" autofocus>
         </div>
 
-        <button class="login-btn" id="loginBtn" onclick="openLogin()">Sign In with Netlify Identity</button>
-
-        <div class="divider">secured by netlify identity</div>
-
-        <div class="info">
-            <strong>First time?</strong> Accept your invite email, then return here to log in. Contact your site admin
-            if you need access.
-        </div>
-
-        <p class="status" id="status"></p>
+        <button id="login-btn" onclick="login()">
+            <div class="spinner" id="spinner"></div>
+            <span id="btn-text">Authenticate</span>
+        </button>
+        <div class="error-msg" id="error-msg"></div>
     </div>
 
     <script>
-        const status = document.getElementById('status');
-
-        // Check if already logged in
-        if (window.netlifyIdentity) {
-            netlifyIdentity.on('init', user => {
-                if (user) {
-                    status.textContent = 'Already signed in. Redirecting…';
-                    status.className = 'status success';
-                    setTimeout(() => { window.location.href = '/admin/'; }, 800);
-                }
-            });
-
-            netlifyIdentity.on('login', user => {
-                status.textContent = 'Signed in! Redirecting to dashboard…';
-                status.className = 'status success';
-                netlifyIdentity.close();
-                setTimeout(() => { window.location.href = '/admin/'; }, 1000);
-            });
-
-            netlifyIdentity.on('error', err => {
-                status.textContent = 'Error: ' + err.message;
-                status.className = 'status error';
-            });
-
-            netlifyIdentity.init();
+        // If already logged in, redirect immediately
+        if (localStorage.getItem('gh_token')) {
+            window.location.replace('/admin/index.html');
         }
 
-        function openLogin() {
-            if (window.netlifyIdentity) {
-                netlifyIdentity.open('login');
-            } else {
-                status.textContent = 'Identity widget not loaded. Check your Netlify Identity setup.';
-                status.className = 'status error';
+        // Allow pressing Enter to submit
+        document.getElementById('gh-token').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') login();
+        });
+
+        async function login() {
+            const token = document.getElementById('gh-token').value.trim();
+            const btn = document.getElementById('login-btn');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btn-text');
+            const errorMsg = document.getElementById('error-msg');
+
+            if (!token) {
+                errorMsg.textContent = 'Please enter a valid GitHub token.';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            try {
+                errorMsg.style.display = 'none';
+                btn.disabled = true;
+                spinner.style.display = 'block';
+                btnText.textContent = 'Verifying...';
+
+                // Verify token with GitHub API
+                const res = await fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (res.ok) {
+                    // Success: Store token and redirect
+                    localStorage.setItem('gh_token', token);
+                    window.location.href = '/admin/index.html';
+                } else {
+                    throw new Error('Invalid token or unauthorized.');
+                }
+
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Invalid token. Please check and try again.';
+                errorMsg.style.display = 'block';
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Authenticate';
             }
         }
     </script>

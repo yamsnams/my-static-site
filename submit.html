@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Brand — Submit</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Netlify Identity Widget -->
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 
 <body>
@@ -36,9 +34,7 @@
     </header>
 
     <div class="submit-page">
-        <!-- Netlify Form integration enabled with netlify data attribute -->
-        <form class="submit-form" name="diary-submission" method="POST" netlify action="success.html">
-            <input type="hidden" name="form-name" value="diary-submission">
+        <form class="submit-form" id="diary-form" onsubmit="sendEmail(event)">
             <h2>share your diary</h2>
 
             <div class="form-group">
@@ -52,8 +48,33 @@
                     required></textarea>
             </div>
 
-            <button type="submit" class="submit-btn">submit</button>
+            <button type="submit" class="submit-btn" id="submit-btn">submit via email</button>
+            <p
+                style="text-align:center; font-size:0.75rem; color:var(--text2); margin-top:20px; text-transform:lowercase;">
+                This will open your default email app.</p>
         </form>
+
+        <script>
+            // Replace with the admin's actual email address
+            const ADMIN_EMAIL = "admin@yourdomain.com";
+
+            function sendEmail(e) {
+                e.preventDefault();
+                const author = document.getElementById('author_name').value.trim() || 'Anonymous';
+                const text = document.getElementById('diary_text').value.trim();
+                if (!text) return;
+
+                const subject = encodeURIComponent(`New Diary Entry from ${author}`);
+                const body = encodeURIComponent(`Author: ${author}\n\nEntry:\n${text}`);
+
+                window.location.href = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
+
+                // Show success text
+                const btn = document.getElementById('submit-btn');
+                btn.textContent = 'Opening Email App...';
+                setTimeout(() => { btn.textContent = 'submit via email'; }, 3000);
+            }
+        </script>
     </div>
 
     <!-- FOOTER -->

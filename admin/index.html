@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — Admin</title>
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         *,
         *::before,
@@ -45,53 +43,10 @@
             min-height: 100vh;
         }
 
-        /* ─── Auth Gate ─── */
-        #auth-gate {
-            position: fixed;
-            inset: 0;
-            background: var(--bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        #auth-gate.hidden {
-            display: none;
-        }
-
-        .gate-spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .gate-msg {
-            color: var(--text2);
-            font-size: 0.85rem;
-        }
-
         /* ─── Layout ─── */
         #app {
             display: flex;
             min-height: 100vh;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #app.visible {
-            opacity: 1;
         }
 
         /* ─── Sidebar ─── */
@@ -131,7 +86,6 @@
         .sidebar-title {
             font-size: 0.88rem;
             font-weight: 600;
-            color: var(--text);
             letter-spacing: -0.01em;
         }
 
@@ -163,7 +117,7 @@
             padding: 9px 10px;
             border-radius: var(--radius);
             cursor: pointer;
-            transition: background 0.15s ease, color 0.15s ease;
+            transition: background 0.15s, color 0.15s;
             color: var(--text2);
             margin-bottom: 2px;
             border: none;
@@ -183,7 +137,7 @@
             color: var(--text);
         }
 
-        .nav-item .nav-icon {
+        .nav-icon {
             width: 18px;
             height: 18px;
             opacity: 0.7;
@@ -256,7 +210,7 @@
             color: var(--red);
         }
 
-        /* ─── Main Content ─── */
+        /* ─── Main ─── */
         .main {
             margin-left: var(--sidebar-w);
             flex: 1;
@@ -265,7 +219,6 @@
             flex-direction: column;
         }
 
-        /* ─── Top Bar ─── */
         .topbar {
             height: var(--header-h);
             background: var(--surface);
@@ -298,7 +251,7 @@
             font-size: 0.82rem;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.15s;
             border: none;
         }
 
@@ -323,17 +276,7 @@
             opacity: 0.9;
         }
 
-        .btn-danger {
-            background: transparent;
-            color: var(--red);
-            border: 1px solid rgba(248, 113, 113, 0.3);
-        }
-
-        .btn-danger:hover {
-            background: rgba(248, 113, 113, 0.1);
-        }
-
-        /* ─── Page Content ─── */
+        /* ─── Pages ─── */
         .page {
             display: none;
             padding: 28px;
@@ -377,7 +320,7 @@
             font-weight: 600;
         }
 
-        /* ─── Stats Grid ─── */
+        /* ─── Stats ─── */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -421,7 +364,18 @@
             margin-right: 5px;
         }
 
-        /* ─── Grid 2 ─── */
+        .dot-green {
+            background: var(--green);
+        }
+
+        .dot-blue {
+            background: var(--blue);
+        }
+
+        .dot-yellow {
+            background: var(--yellow);
+        }
+
         .grid2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -434,7 +388,7 @@
             gap: 16px;
         }
 
-        /* ─── Form Controls ─── */
+        /* ─── Forms ─── */
         .form-group {
             margin-bottom: 18px;
         }
@@ -452,6 +406,7 @@
         input[type="text"],
         input[type="url"],
         input[type="date"],
+        input[type="password"],
         textarea,
         select {
             width: 100%;
@@ -477,44 +432,7 @@
             min-height: 90px;
         }
 
-        /* ─── Table ─── */
-        .table-wrap {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--muted);
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-
-        td {
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text2);
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: var(--surface2);
-            color: var(--text);
-        }
-
-        /* ─── Entry Cards ─── */
+        /* ─── Entries ─── */
         .entry-list {
             display: flex;
             flex-direction: column;
@@ -611,7 +529,7 @@
             justify-content: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s;
         }
 
         .modal-overlay.open {
@@ -629,7 +547,7 @@
             max-height: 90vh;
             overflow-y: auto;
             transform: scale(0.97);
-            transition: transform 0.2s ease;
+            transition: transform 0.2s;
         }
 
         .modal-overlay.open .modal {
@@ -654,7 +572,6 @@
             color: var(--muted);
             cursor: pointer;
             font-size: 20px;
-            line-height: 1;
             padding: 4px;
         }
 
@@ -689,9 +606,6 @@
             color: var(--text);
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
             animation: toastIn 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .toast.success {
@@ -714,37 +628,7 @@
             }
         }
 
-        /* ─── Analytics ─── */
-        .analytics-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 16px;
-            margin-top: 20px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 220px;
-        }
-
-        /* ─── Color Dots ─── */
-        .dot-green {
-            background: var(--green);
-        }
-
-        .dot-blue {
-            background: var(--blue);
-        }
-
-        .dot-yellow {
-            background: var(--yellow);
-        }
-
-        .dot-muted {
-            background: var(--muted);
-        }
-
-        /* ─── Section Header ─── */
+        /* ─── Misc ─── */
         .section-header {
             display: flex;
             align-items: center;
@@ -764,7 +648,6 @@
             margin-top: 2px;
         }
 
-        /* ─── Settings ─── */
         .settings-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -808,7 +691,6 @@
             color: var(--red);
         }
 
-        /* ─── Inline Edit ─── */
         .inline-edit-group {
             display: flex;
             align-items: center;
@@ -819,7 +701,6 @@
             flex: 1;
         }
 
-        /* ─── GoatCounter iframe ─── */
         .analytics-embed {
             width: 100%;
             height: 500px;
@@ -828,7 +709,6 @@
             background: var(--surface2);
         }
 
-        /* ─── Empty State ─── */
         .empty-state {
             text-align: center;
             padding: 48px 20px;
@@ -844,7 +724,6 @@
             font-size: 0.9rem;
         }
 
-        /* ─── Status Badge ─── */
         .badge {
             display: inline-block;
             font-size: 0.7rem;
@@ -860,11 +739,6 @@
             color: var(--green);
         }
 
-        .badge-muted {
-            background: var(--surface3);
-            color: var(--text2);
-        }
-
         .save-indicator {
             font-size: 0.78rem;
             color: var(--muted);
@@ -877,13 +751,6 @@
 
 <body>
 
-    <!-- Auth Gate -->
-    <div id="auth-gate">
-        <div class="gate-spinner"></div>
-        <p class="gate-msg">Verifying authentication…</p>
-    </div>
-
-    <!-- Toast Container -->
     <div id="toast-container"></div>
 
     <!-- Entry Modal -->
@@ -906,17 +773,16 @@
                 <textarea id="m-text" rows="5" placeholder="Write the diary entry…"></textarea>
             </div>
             <div class="form-group">
-                <label>Illustration (relative path in /assets/)</label>
+                <label>Illustration path (e.g. assets/illustration-left.svg)</label>
                 <input type="text" id="m-image" placeholder="assets/illustration-left.svg">
             </div>
             <div class="modal-footer">
                 <button class="btn btn-ghost" onclick="closeModal('entryModal')">Cancel</button>
-                <button class="btn btn-primary" id="saveEntryBtn" onclick="saveEntry()">Save Entry</button>
+                <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
             </div>
         </div>
     </div>
 
-    <!-- Main App -->
     <div id="app">
 
         <!-- Sidebar -->
@@ -928,7 +794,6 @@
                     <div class="sidebar-subtitle">Content Manager</div>
                 </div>
             </div>
-
             <nav class="sidebar-nav">
                 <div class="nav-section-label">Overview</div>
                 <button class="nav-item active" onclick="showPage('overview', this)">
@@ -940,7 +805,6 @@
                     </svg>
                     Overview
                 </button>
-
                 <div class="nav-section-label">Content</div>
                 <button class="nav-item" onclick="showPage('diary', this)">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -956,7 +820,6 @@
                     </svg>
                     Form Submissions
                 </button>
-
                 <div class="nav-section-label">Manage</div>
                 <button class="nav-item" onclick="showPage('page-content', this)">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -982,12 +845,11 @@
                     Site Settings
                 </button>
             </nav>
-
             <div class="sidebar-footer">
                 <div class="user-row">
                     <div class="user-avatar">👤</div>
                     <div class="user-info">
-                        <div class="user-email" id="user-email">admin@site.com</div>
+                        <div class="user-email">Admin</div>
                     </div>
                     <button class="logout-btn" onclick="logout()" title="Sign out">↪</button>
                 </div>
@@ -996,8 +858,6 @@
 
         <!-- Main -->
         <div class="main">
-
-            <!-- Top Bar -->
             <header class="topbar">
                 <span class="topbar-title" id="topbar-title">Overview</span>
                 <div class="topbar-actions">
@@ -1006,7 +866,7 @@
                 </div>
             </header>
 
-            <!-- ── Overview ── -->
+            <!-- Overview -->
             <div class="page active" id="page-overview">
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1016,8 +876,8 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Form Submissions</div>
-                        <div class="stat-value" id="s-forms">—</div>
-                        <div class="stat-sub"><span class="stat-dot dot-blue"></span>Via Netlify Forms</div>
+                        <div class="stat-value">—</div>
+                        <div class="stat-sub"><span class="stat-dot dot-blue"></span>Via Cloudflare/Netlify Forms</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Pages</div>
@@ -1027,13 +887,11 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Status</div>
-                        <div class="stat-value" style="font-size:1.1rem; margin-top:6px;">
-                            <span class="badge badge-green">Live</span>
-                        </div>
-                        <div class="stat-sub"><span class="stat-dot dot-green"></span>Deployed on Netlify</div>
+                        <div class="stat-value" style="font-size:1.1rem;margin-top:6px;"><span
+                                class="badge badge-green">Live</span></div>
+                        <div class="stat-sub"><span class="stat-dot dot-green"></span>Deployed on Cloudflare Pages</div>
                     </div>
                 </div>
-
                 <div class="grid2">
                     <div class="card">
                         <div class="card-header">
@@ -1043,23 +901,20 @@
                         <div id="recent-entries-preview"></div>
                     </div>
                     <div class="card">
-                        <div class="card-header">
-                            <span class="card-title">Quick Actions</span>
-                        </div>
+                        <div class="card-header"><span class="card-title">Quick Actions</span></div>
                         <div style="display:flex;flex-direction:column;gap:10px;">
                             <button class="btn btn-primary" onclick="navToDiary(); openNewEntry()">+ New Diary
                                 Entry</button>
                             <button class="btn btn-ghost" onclick="navToPage('page-content')">✏️ Edit Page
                                 Content</button>
                             <button class="btn btn-ghost" onclick="navToPage('analytics')">📊 View Analytics</button>
-                            <a href="https://app.netlify.com" target="_blank" class="btn btn-ghost"
-                                style="text-align:center;display:block;">📋 Form Dashboard ↗</a>
+                            <button class="btn btn-ghost" onclick="navToPage('settings')">⚙️ GitHub Setup</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ── Diary ── -->
+            <!-- Diary -->
             <div class="page" id="page-diary">
                 <div class="section-header">
                     <div>
@@ -1078,29 +933,31 @@
                 </div>
             </div>
 
-            <!-- ── Form Submissions ── -->
+            <!-- Submissions -->
             <div class="page" id="page-submissions">
                 <div class="section-header">
                     <div>
                         <div class="section-title">Form Submissions</div>
                         <div class="section-sub">Visitor diary submissions from the Submit page</div>
                     </div>
-                    <a href="https://app.netlify.com" target="_blank" class="btn btn-ghost">Open Netlify Forms ↗</a>
                 </div>
                 <div class="card">
-                    <p style="color:var(--text2); font-size:0.85rem; line-height:1.7;">
-                        Netlify Forms handles form submissions securely in the cloud and cannot be read directly from
-                        this dashboard without a server-side API. To view, export, or respond to your diary submissions,
-                        visit your <a href="https://app.netlify.com" target="_blank"
-                            style="color:var(--accent2);">Netlify dashboard → Forms tab</a>.<br><br>
-                        <strong style="color:var(--text);">Tip:</strong> Netlify can also email you a notification every
-                        time someone submits a new entry. Set this up under Forms → Form notifications in your Netlify
-                        dashboard.
+                    <p style="color:var(--text2);font-size:0.85rem;line-height:1.7;">
+                        Since external services like Netlify have been removed, public submissions cannot be
+                        automatically saved to your GitHub.
+                        <br><br>
+                        Instead, the <strong>submit.html</strong> page now opens the visitor's email client (via a
+                        <code>mailto:</code> link) to email the diary entry directly to you.
+                        <br><br>
+                        <strong style="color:var(--text);">How it works:</strong> When you receive a diary entry via
+                        email, simply copy it and go to the <strong style="color:var(--accent2); cursor:pointer;"
+                            onclick="navToDiary()">Diary Entries tab</strong> to publish it manually. This ensures a
+                        100% private, zero-cost, serverless setup.
                     </p>
                 </div>
             </div>
 
-            <!-- ── Page Content ── -->
+            <!-- Page Content -->
             <div class="page" id="page-page-content">
                 <div class="section-header">
                     <div>
@@ -1112,44 +969,28 @@
                 <div class="grid2" style="gap:16px;">
                     <div class="card">
                         <div class="card-header"><span class="card-title">Branding & Titles</span></div>
-                        <div class="form-group">
-                            <label>Site Title (shown in browser tab)</label>
-                            <input type="text" id="pc-site-title" placeholder="Your Brand">
-                        </div>
-                        <div class="form-group">
-                            <label>Hero Page Title</label>
-                            <input type="text" id="pc-hero-title" placeholder="Landing page title">
-                        </div>
-                        <div class="form-group">
-                            <label>Diary Page Title</label>
-                            <input type="text" id="pc-diary-title" placeholder="Diary page title">
-                        </div>
-                        <div class="form-group">
-                            <label>Submit Page Title</label>
-                            <input type="text" id="pc-submit-title" placeholder="Submit page title">
-                        </div>
+                        <div class="form-group"><label>Site Title (browser tab)</label><input type="text"
+                                id="pc-site-title" placeholder="Your Brand"></div>
+                        <div class="form-group"><label>Hero Page Title</label><input type="text" id="pc-hero-title"
+                                placeholder="Your Brand — Landing"></div>
+                        <div class="form-group"><label>Diary Page Title</label><input type="text" id="pc-diary-title"
+                                placeholder="Your Brand — Diary"></div>
+                        <div class="form-group"><label>Submit Page Title</label><input type="text" id="pc-submit-title"
+                                placeholder="Your Brand — Submit"></div>
                     </div>
-
                     <div class="card">
                         <div class="card-header"><span class="card-title">Footer</span></div>
-                        <div class="form-group">
-                            <label>Copyright Text</label>
-                            <input type="text" id="pc-footer-copy" placeholder="© 2026 Your Brand">
-                        </div>
-                        <div class="form-group">
-                            <label>Terms & Policies URL</label>
-                            <input type="url" id="pc-terms-link" placeholder="https://…">
-                        </div>
-                        <div class="form-group">
-                            <label>Terms Link Label</label>
-                            <input type="text" id="pc-terms-label" placeholder="Terms and Policies">
-                        </div>
+                        <div class="form-group"><label>Copyright Text</label><input type="text" id="pc-footer-copy"
+                                placeholder="© 2026 Your Brand"></div>
+                        <div class="form-group"><label>Terms & Policies URL</label><input type="url" id="pc-terms-link"
+                                placeholder="https://…"></div>
+                        <div class="form-group"><label>Terms Link Label</label><input type="text" id="pc-terms-label"
+                                placeholder="Terms and Policies"></div>
                     </div>
-
                     <div class="card" style="grid-column: 1 / -1;">
                         <div class="card-header"><span class="card-title">Social Links</span></div>
-                        <p style="color:var(--text2);font-size:0.8rem;margin-bottom:14px;">These are shown in the header
-                            on all pages. Format: Label | URL.</p>
+                        <p style="color:var(--text2);font-size:0.8rem;margin-bottom:14px;">Shown in header on all pages.
+                        </p>
                         <div id="social-links-wrap"></div>
                         <button class="btn btn-ghost" style="margin-top:10px;" onclick="addSocialLink()">+ Add Social
                             Link</button>
@@ -1157,7 +998,7 @@
                 </div>
             </div>
 
-            <!-- ── Analytics ── -->
+            <!-- Analytics -->
             <div class="page" id="page-analytics">
                 <div class="section-header">
                     <div>
@@ -1166,42 +1007,37 @@
                     </div>
                     <a href="https://goatcounter.com" target="_blank" class="btn btn-ghost">Open Dashboard ↗</a>
                 </div>
-
                 <div class="card" style="margin-bottom:16px;">
-                    <div class="card-header"><span class="card-title">Setup Required</span></div>
-                    <p style="color:var(--text2);font-size:0.85rem;line-height:1.8;">
-                        To enable analytics, create a free account at <a href="https://goatcounter.com" target="_blank"
-                            style="color:var(--accent2);">GoatCounter.com</a> and enter your site code below. Once
-                        configured, your full analytics dashboard will appear here.
+                    <div class="card-header"><span class="card-title">Connect GoatCounter</span></div>
+                    <p style="color:var(--text2);font-size:0.85rem;line-height:1.8;margin-bottom:16px;">
+                        Create a free account at <a href="https://goatcounter.com" target="_blank"
+                            style="color:var(--accent2);">GoatCounter.com</a>, then enter your site code to embed your
+                        analytics dashboard here.
                     </p>
-                    <div class="form-group" style="margin-top:16px;">
-                        <label>Your GoatCounter Site Code (e.g., <code
-                                style="color:var(--accent2);">mysite</code>)</label>
+                    <div class="form-group">
+                        <label>Your GoatCounter Site Code</label>
                         <div class="inline-edit-group">
                             <input type="text" id="gc-code" placeholder="mysite">
                             <button class="btn btn-primary" onclick="saveGoatCounter()">Connect</button>
                         </div>
                     </div>
                 </div>
-
                 <div id="analytics-embed-wrap" style="display:none;">
-                    <div class="card">
-                        <iframe id="gc-iframe" class="analytics-embed" src="" title="Analytics Dashboard"></iframe>
-                    </div>
+                    <div class="card"><iframe id="gc-iframe" class="analytics-embed" src=""
+                            title="Analytics Dashboard"></iframe></div>
                 </div>
-
-                <div class="grid3" style="margin-top:16px;" id="analytics-local-stats">
-                    <div class="card">
-                        <div class="stat-label">Total Entries Published</div>
+                <div class="grid3" style="margin-top:16px;">
+                    <div class="stat-card">
+                        <div class="stat-label">Entries Published</div>
                         <div class="stat-value" id="al-entries">—</div>
                         <div class="stat-sub">Diary entries live</div>
                     </div>
-                    <div class="card">
+                    <div class="stat-card">
                         <div class="stat-label">Pages in Site</div>
                         <div class="stat-value">4</div>
                         <div class="stat-sub">index, diary, submit, success</div>
                     </div>
-                    <div class="card">
+                    <div class="stat-card">
                         <div class="stat-label">Last Updated</div>
                         <div class="stat-value" id="al-updated" style="font-size:1rem;padding-top:4px;">—</div>
                         <div class="stat-sub">Via GitHub commit</div>
@@ -1209,7 +1045,7 @@
                 </div>
             </div>
 
-            <!-- ── Site Settings ── -->
+            <!-- Settings -->
             <div class="page" id="page-settings">
                 <div class="section-header">
                     <div>
@@ -1217,7 +1053,6 @@
                         <div class="section-sub">Configure GitHub auto-save and download data files</div>
                     </div>
                 </div>
-
                 <div class="grid2">
                     <div class="card" style="grid-column: 1 / -1;">
                         <div class="card-header">
@@ -1225,37 +1060,28 @@
                             <span id="gh-status" style="font-size:0.78rem;color:var(--muted);">Not connected</span>
                         </div>
                         <p style="color:var(--text2);font-size:0.82rem;margin-bottom:18px;line-height:1.7;">
-                            Connect your GitHub account to automatically save content changes directly to your
-                            repository. Netlify will auto-deploy within ~30 seconds of each save.
+                            Connect your GitHub account so every change auto-commits to your repo. Cloudflare Pages
+                            redeploys in ~30 seconds.
                         </p>
                         <div class="settings-grid">
-                            <div class="form-group">
-                                <label>GitHub Personal Access Token</label>
-                                <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
-                            </div>
-                            <div class="form-group">
-                                <label>Repository Owner (your GitHub username)</label>
-                                <input type="text" id="gh-owner" placeholder="yourusername">
-                            </div>
-                            <div class="form-group">
-                                <label>Repository Name</label>
-                                <input type="text" id="gh-repo" placeholder="my-static-site">
-                            </div>
-                            <div class="form-group">
-                                <label>Branch (default: main)</label>
-                                <input type="text" id="gh-branch" placeholder="main">
-                            </div>
+                            <div class="form-group"><label>GitHub Personal Access Token</label><input type="password"
+                                    id="gh-token" placeholder="ghp_xxxxxxxxxxxx"></div>
+                            <div class="form-group"><label>Repository Owner (GitHub username)</label><input type="text"
+                                    id="gh-owner" placeholder="yourusername"></div>
+                            <div class="form-group"><label>Repository Name</label><input type="text" id="gh-repo"
+                                    placeholder="my-static-site"></div>
+                            <div class="form-group"><label>Branch (default: main)</label><input type="text"
+                                    id="gh-branch" placeholder="main"></div>
                         </div>
                         <button class="btn btn-primary" onclick="saveGitHubConfig()" style="margin-top:8px;">Connect
                             GitHub</button>
                         <p style="color:var(--muted);font-size:0.75rem;margin-top:12px;">
-                            ⚠️ Your token is stored locally in your browser only. Create a token at GitHub → Settings →
-                            Developer Settings → Personal Access Tokens (Classic). Give it <strong
-                                style="color:var(--accent2);">repo</strong> scope.
+                            ⚠️ Token stored in your browser only. Create at GitHub → Settings → Developer Settings →
+                            Personal Access Tokens (Classic) with <strong style="color:var(--accent2);">repo</strong>
+                            scope.
                         </p>
                     </div>
                 </div>
-
                 <div class="grid2" style="margin-top:16px;">
                     <div class="card">
                         <div class="card-header"><span class="card-title">Current settings.json</span></div>
@@ -1264,13 +1090,11 @@
                     </div>
                     <div class="card">
                         <div class="card-header"><span class="card-title">Manual Download Fallback</span></div>
-                        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:14px;">
-                            If GitHub is not connected, download files and commit them manually.
-                        </p>
-                        <button class="btn btn-ghost" onclick="downloadSettings()">&#8659; Download
-                            settings.json</button>
-                        <button class="btn btn-ghost" onclick="downloadEntries()" style="margin-top:8px;">&#8659;
-                            Download entries.json</button>
+                        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:14px;">If GitHub is not connected,
+                            download files and commit manually.</p>
+                        <button class="btn btn-ghost" onclick="downloadSettings()">⬇ Download settings.json</button>
+                        <button class="btn btn-ghost" onclick="downloadEntries()" style="margin-top:8px;">⬇ Download
+                            entries.json</button>
                     </div>
                 </div>
             </div>
@@ -1279,52 +1103,27 @@
     </div><!-- /#app -->
 
     <script>
-        // ─── State ───────────────────────────────────────────────
+        // ─── State ───────────────────────────────────────────────────────
         let ENTRIES = [];
         let SETTINGS = {};
         let editingIndex = -1;
 
-        // ─── Auth ────────────────────────────────────────────────
-        const gate = document.getElementById('auth-gate');
-        const app = document.getElementById('app');
-
-        function showApp(user) {
-            gate.classList.add('hidden');
-            document.getElementById('user-email').textContent = user.email;
-            app.classList.add('visible');
+        // ─── Auth: GitHub PAT (Client-side) ──────────────────────────────
+        // We use the GitHub PAT stored in localStorage as the authentication key.
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('gh_token')) {
+                window.location.replace('/admin/login.html');
+                return;
+            }
             initDashboard();
-        }
-
-        function requireAuth() {
-            gate.style.display = 'flex';
-            gate.classList.remove('hidden');
-            setTimeout(() => { window.location.href = '/admin/login.html'; }, 1500);
-            document.querySelector('.gate-msg').textContent = 'Not authenticated. Redirecting to login…';
-        }
-
-        if (window.netlifyIdentity) {
-            netlifyIdentity.on('init', user => {
-                if (user) { showApp(user); }
-                else { requireAuth(); }
-            });
-            netlifyIdentity.on('login', user => { showApp(user); });
-            netlifyIdentity.init();
-        } else {
-            // Dev fallback — remove in production
-            console.warn('Netlify Identity not loaded. Running in dev mode.');
-            gate.classList.add('hidden');
-            app.classList.add('visible');
-            initDashboard();
-        }
+        });
 
         function logout() {
-            if (window.netlifyIdentity) {
-                netlifyIdentity.logout();
-                window.location.href = '/admin/login.html';
-            }
+            localStorage.removeItem('gh_token');
+            window.location.href = '/admin/login.html';
         }
 
-        // ─── Navigation helpers ───────────────────────────────────
+        // ─── Navigation ──────────────────────────────────────────────────
         function showPage(id, btn) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1337,15 +1136,13 @@
                 analytics: 'Analytics', settings: 'Site Settings'
             };
             document.getElementById('topbar-title').textContent = titles[id] || id;
-
-            // Lazy load
             if (id === 'page-content' || id === 'settings') renderSettings();
             if (id === 'analytics') loadAnalyticsStats();
         }
 
         function navToDiary() {
-            const diaryBtn = document.querySelector('.nav-item[onclick*="\'diary\'"]');
-            showPage('diary', diaryBtn);
+            const btn = document.querySelector('.nav-item[onclick*="\'diary\'"]');
+            showPage('diary', btn);
         }
 
         function navToPage(id) {
@@ -1353,22 +1150,29 @@
             showPage(id, btn);
         }
 
-        // ─── Init ────────────────────────────────────────────────
+        // ─── Init ────────────────────────────────────────────────────────
         async function initDashboard() {
             await loadEntries();
             await loadSettings();
             renderOverview();
+            // Restore GitHub config status
+            const { owner, repo } = getGitHubConfig();
+            if (owner && repo) {
+                const ghStatus = document.getElementById('gh-status');
+                if (ghStatus) { ghStatus.textContent = `✓ Connected to ${owner}/${repo}`; ghStatus.style.color = 'var(--green)'; }
+            }
+            // Restore GoatCounter
+            const gcCode = localStorage.getItem('gc_code');
+            if (gcCode) { document.getElementById('gc-code').value = gcCode; showGoatCounter(gcCode); }
         }
 
-        // ─── Load Data ───────────────────────────────────────────
+        // ─── Data Loading ─────────────────────────────────────────────────
         async function loadEntries() {
             try {
                 const r = await fetch('../data/entries.json?t=' + Date.now());
                 const d = await r.json();
                 ENTRIES = (d.entries || d || []).slice();
-            } catch (e) {
-                ENTRIES = [];
-            }
+            } catch (e) { ENTRIES = []; }
             renderEntries();
             updateBadge();
         }
@@ -1380,15 +1184,9 @@
             } catch (e) {
                 SETTINGS = { site_title: '', footer_copy: '', social_links: [], terms_link: '', terms_label: '' };
             }
-            // Load GoatCounter code from localStorage
-            const gcCode = localStorage.getItem('gc_code');
-            if (gcCode) {
-                document.getElementById('gc-code').value = gcCode;
-                showGoatCounter(gcCode);
-            }
         }
 
-        // ─── Entries ─────────────────────────────────────────────
+        // ─── Entries ─────────────────────────────────────────────────────
         function renderEntries() {
             const wrap = document.getElementById('entry-list-wrap');
             if (!ENTRIES.length) {
@@ -1415,7 +1213,8 @@
         function updateBadge() {
             document.getElementById('entriesCount').textContent = ENTRIES.length;
             document.getElementById('s-entries').textContent = ENTRIES.length;
-            document.getElementById('al-entries').textContent = ENTRIES.length;
+            const ale = document.getElementById('al-entries');
+            if (ale) ale.textContent = ENTRIES.length;
         }
 
         function renderOverview() {
@@ -1465,12 +1264,8 @@
                 image: document.getElementById('m-image').value.trim() || 'assets/illustration-left.svg'
             };
             if (!entry.text) { toast('Entry text is required.', 'error'); return; }
-
-            if (editingIndex >= 0) {
-                ENTRIES[editingIndex] = entry;
-            } else {
-                ENTRIES.unshift(entry);
-            }
+            if (editingIndex >= 0) { ENTRIES[editingIndex] = entry; }
+            else { ENTRIES.unshift(entry); }
             closeModal('entryModal');
             renderEntries();
             renderOverview();
@@ -1487,27 +1282,35 @@
             pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Delete diary entry');
         }
 
-        // ─── Settings ────────────────────────────────────────────
+        // ─── Settings ────────────────────────────────────────────────────
         function renderSettings() {
             const s = SETTINGS;
-            document.getElementById('pc-site-title').value = s.site_title || '';
-            document.getElementById('pc-hero-title').value = s.hero_title || '';
-            document.getElementById('pc-diary-title').value = s.diary_title || '';
-            document.getElementById('pc-submit-title').value = s.submit_title || '';
-            document.getElementById('pc-footer-copy').value = s.footer_copy || '';
-            document.getElementById('pc-terms-link').value = s.terms_link || '';
-            document.getElementById('pc-terms-label').value = s.terms_label || '';
+            const val = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+            val('pc-site-title', s.site_title);
+            val('pc-hero-title', s.hero_title);
+            val('pc-diary-title', s.diary_title);
+            val('pc-submit-title', s.submit_title);
+            val('pc-footer-copy', s.footer_copy);
+            val('pc-terms-link', s.terms_link);
+            val('pc-terms-label', s.terms_label);
+            // GitHub config
+            const cfg = getGitHubConfig();
+            val('gh-owner', cfg.owner);
+            val('gh-repo', cfg.repo);
+            val('gh-branch', cfg.branch !== 'main' ? cfg.branch : '');
             renderSocialLinks();
-            document.getElementById('settings-preview').textContent = JSON.stringify(SETTINGS, null, 2);
+            const prev = document.getElementById('settings-preview');
+            if (prev) prev.textContent = JSON.stringify(SETTINGS, null, 2);
         }
 
         function renderSocialLinks() {
             const wrap = document.getElementById('social-links-wrap');
+            if (!wrap) return;
             wrap.innerHTML = (SETTINGS.social_links || []).map((sl, i) => `
       <div class="social-row">
-        <input type="text" value="${sl.name}" placeholder="Label (e.g. Instagram)" oninput="SETTINGS.social_links[${i}].name = this.value">
-        <input type="url" value="${sl.url}" placeholder="https://instagram.com/…" oninput="SETTINGS.social_links[${i}].url = this.value" style="flex:2;">
-        <input type="text" value="${sl.icon}" placeholder="assets/icon-social-1.svg" oninput="SETTINGS.social_links[${i}].icon = this.value" style="flex:1.5;">
+        <input type="text" value="${sl.name || ''}" placeholder="Label" oninput="SETTINGS.social_links[${i}].name = this.value">
+        <input type="url" value="${sl.url || ''}" placeholder="https://…" oninput="SETTINGS.social_links[${i}].url = this.value" style="flex:2;">
+        <input type="text" value="${sl.icon || ''}" placeholder="assets/icon-social-1.svg" oninput="SETTINGS.social_links[${i}].icon = this.value" style="flex:1.5;">
         <button class="remove-btn" onclick="removeSocialLink(${i})">✕</button>
       </div>
     `).join('');
@@ -1525,20 +1328,23 @@
         }
 
         function saveSettings() {
-            SETTINGS.site_title = document.getElementById('pc-site-title').value.trim();
-            SETTINGS.hero_title = document.getElementById('pc-hero-title').value.trim();
-            SETTINGS.diary_title = document.getElementById('pc-diary-title').value.trim();
-            SETTINGS.submit_title = document.getElementById('pc-submit-title').value.trim();
-            SETTINGS.footer_copy = document.getElementById('pc-footer-copy').value.trim();
-            SETTINGS.terms_link = document.getElementById('pc-terms-link').value.trim();
-            SETTINGS.terms_label = document.getElementById('pc-terms-label').value.trim();
-            document.getElementById('settings-preview').textContent = JSON.stringify(SETTINGS, null, 2);
+            const get = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+            SETTINGS.site_title = get('pc-site-title');
+            SETTINGS.hero_title = get('pc-hero-title');
+            SETTINGS.diary_title = get('pc-diary-title');
+            SETTINGS.submit_title = get('pc-submit-title');
+            SETTINGS.footer_copy = get('pc-footer-copy');
+            SETTINGS.terms_link = get('pc-terms-link');
+            SETTINGS.terms_label = get('pc-terms-label');
+            const prev = document.getElementById('settings-preview');
+            if (prev) prev.textContent = JSON.stringify(SETTINGS, null, 2);
             pushToGitHub('data/settings.json', SETTINGS, 'Update site settings');
         }
 
-        // ─── Analytics ───────────────────────────────────────────
+        // ─── Analytics ───────────────────────────────────────────────────
         function loadAnalyticsStats() {
-            document.getElementById('al-updated').textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            const el = document.getElementById('al-updated');
+            if (el) el.textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
         }
 
         function saveGoatCounter() {
@@ -1552,11 +1358,11 @@
         function showGoatCounter(code) {
             const wrap = document.getElementById('analytics-embed-wrap');
             const iframe = document.getElementById('gc-iframe');
-            iframe.src = `https://${code}.goatcounter.com`;
-            wrap.style.display = 'block';
+            if (iframe) iframe.src = `https://${code}.goatcounter.com`;
+            if (wrap) wrap.style.display = 'block';
         }
 
-        // ─── GitHub API Auto-Push ───────────────────────────────
+        // ─── GitHub API Auto-Push ────────────────────────────────────────
         function getGitHubConfig() {
             return {
                 token: localStorage.getItem('gh_token'),
@@ -1576,74 +1382,53 @@
             localStorage.setItem('gh_owner', owner);
             localStorage.setItem('gh_repo', repo);
             localStorage.setItem('gh_branch', branch);
-            document.getElementById('gh-status').textContent = `✓ Connected to ${owner}/${repo}`;
-            document.getElementById('gh-status').style.color = 'var(--green)';
-            toast('GitHub connected! Changes will now auto-save to your repo.', 'success');
+            const s = document.getElementById('gh-status');
+            if (s) { s.textContent = `✓ Connected to ${owner}/${repo}`; s.style.color = 'var(--green)'; }
+            toast('GitHub connected! Changes will now auto-save.', 'success');
         }
 
         async function pushToGitHub(path, data, message) {
             const { token, owner, repo, branch } = getGitHubConfig();
             if (!token || !owner || !repo) {
-                // Fallback: download the file
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
-                toast('GitHub not set up. File downloaded — commit manually. Connect GitHub in Settings to auto-save.', 'error');
+                toast('GitHub not set up — file downloaded. Go to Settings to connect GitHub.', 'error');
                 return;
             }
-
-            // Show saving indicator
             const indicator = document.getElementById('save-indicator');
-            indicator.textContent = '⏳ Saving to GitHub…';
-
+            if (indicator) indicator.textContent = '⏳ Saving…';
             try {
-                // Step 1: Get current file SHA (needed to update existing file)
                 const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
                 const headers = {
                     'Authorization': `token ${token}`,
                     'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 };
-
                 let sha = null;
                 try {
-                    const existingRes = await fetch(apiBase + `?ref=${branch}`, { headers });
-                    if (existingRes.ok) {
-                        const existing = await existingRes.json();
-                        sha = existing.sha;
-                    }
-                } catch (e) { /* File may not exist yet */ }
-
-                // Step 2: Push the updated content
+                    const res = await fetch(`${apiBase}?ref=${branch}`, { headers });
+                    if (res.ok) { const d = await res.json(); sha = d.sha; }
+                } catch (e) { }
                 const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
                 const body = { message: `[Admin] ${message}`, content, branch };
                 if (sha) body.sha = sha;
-
-                const res = await fetch(apiBase, {
-                    method: 'PUT',
-                    headers,
-                    body: JSON.stringify(body)
-                });
-
+                const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
                 if (res.ok) {
-                    indicator.textContent = '✓ Saved & deployed';
-                    toast('Saved to GitHub! Netlify will update in ~30 seconds.', 'success');
-                    setTimeout(() => { indicator.textContent = ''; }, 5000);
+                    if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
+                    toast('Saved to GitHub! Site updates in ~30s.', 'success');
                 } else {
                     const err = await res.json();
                     throw new Error(err.message || 'GitHub API error');
                 }
             } catch (err) {
-                indicator.textContent = '⚠ Save failed';
+                if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
                 toast('GitHub save failed: ' + err.message, 'error');
-                setTimeout(() => { indicator.textContent = ''; }, 5000);
-                // Fallback to download
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
             }
         }
 
-        // ─── Download Helpers (fallback) ──────────────────────────
+        // ─── Download Fallback ───────────────────────────────────────────
         function downloadSettings() { download('settings.json', JSON.stringify(SETTINGS, null, 2)); }
         function downloadEntries() { download('entries.json', JSON.stringify({ entries: ENTRIES }, null, 2)); }
-
         function download(filename, content) {
             const a = document.createElement('a');
             a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(content);
@@ -1651,26 +1436,24 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            toast(filename + ' downloaded — commit to GitHub to publish.', 'success');
+            toast(filename + ' downloaded.', 'success');
         }
 
-        // ─── Modal ───────────────────────────────────────────────
+        // ─── Modal ───────────────────────────────────────────────────────
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-        // Close on overlay click
         document.querySelectorAll('.modal-overlay').forEach(o => {
             o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
         });
 
-        // ─── Toast ───────────────────────────────────────────────
+        // ─── Toast ───────────────────────────────────────────────────────
         function toast(msg, type = 'success') {
             const c = document.getElementById('toast-container');
             const t = document.createElement('div');
             t.className = 'toast ' + type;
             t.innerHTML = (type === 'success' ? '✓ ' : '⚠ ') + msg;
             c.appendChild(t);
-            setTimeout(() => t.remove(), 4000);
+            setTimeout(() => t.remove(), 4500);
         }
     </script>
 </body>
