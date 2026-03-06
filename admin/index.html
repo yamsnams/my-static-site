@@ -1072,6 +1072,9 @@
                                     placeholder="my-static-site"></div>
                             <div class="form-group"><label>Branch (default: main)</label><input type="text"
                                     id="gh-branch" placeholder="main"></div>
+                            <div class="form-group" style="grid-column: span 2;"><label>Folder Path in Repo (leave empty
+                                    if site is at root)</label><input type="text" id="gh-path"
+                                    placeholder="e.g. my-folder"></div>
                         </div>
                         <button class="btn btn-primary" id="gh-connect-btn" onclick="saveGitHubConfig()"
                             style="margin-top:8px;">Connect
@@ -1164,11 +1167,12 @@
                 document.getElementById('gh-owner').value = cfg.owner || '';
                 document.getElementById('gh-repo').value = cfg.repo || '';
                 document.getElementById('gh-branch').value = cfg.branch || 'main';
+                document.getElementById('gh-path').value = cfg.root || '';
             }
 
             if (cfg.owner && cfg.repo) {
                 const ghStatus = document.getElementById('gh-status');
-                if (ghStatus) { ghStatus.innerHTML = `✓ Connected to ${cfg.owner}/${cfg.repo}`; ghStatus.style.color = 'var(--green)'; }
+                if (ghStatus) { ghStatus.innerHTML = `✓ Connected to ${cfg.owner}/${cfg.repo} (${cfg.branch}${cfg.root ? `/${cfg.root}` : ''})`; ghStatus.style.color = 'var(--green)'; }
             }
 
             // Restore GoatCounter
@@ -1308,6 +1312,7 @@
             val('gh-owner', cfg.owner);
             val('gh-repo', cfg.repo);
             val('gh-branch', cfg.branch !== 'main' ? cfg.branch : '');
+            val('gh-path', cfg.root);
             renderSocialLinks();
             const prev = document.getElementById('settings-preview');
             if (prev) prev.textContent = JSON.stringify(SETTINGS, null, 2);
@@ -1378,7 +1383,8 @@
                 token: localStorage.getItem('gh_token'),
                 owner: localStorage.getItem('gh_owner'),
                 repo: localStorage.getItem('gh_repo'),
-                branch: localStorage.getItem('gh_branch') || 'main'
+                branch: localStorage.getItem('gh_branch') || 'main',
+                root: localStorage.getItem('gh_path') || ''
             };
         }
 
@@ -1388,34 +1394,36 @@
             const owner = document.getElementById('gh-owner').value.trim();
             const repo = document.getElementById('gh-repo').value.trim();
             const branch = document.getElementById('gh-branch').value.trim() || 'main';
+            let root = document.getElementById('gh-path').value.trim().replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
             if (!token || !owner || !repo) { toast('All GitHub fields are required.', 'error'); return; }
 
             if (btn) btn.textContent = 'Testing connection...';
             try {
-                // 1. Test the connection to the repo
-                const repoRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-                });
-
+                const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' };
+                // 1. Test the repo
+                const repoRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, { headers });
                 if (!repoRes.ok) {
                     if (repoRes.status === 404) throw new Error('Repository not found. Check owner and repo names.');
                     if (repoRes.status === 401) throw new Error('Invalid GitHub token. Ensure it has "repo" scope.');
                     throw new Error(`GitHub Repo Error: ${repoRes.status}`);
                 }
-
                 const repoData = await repoRes.json();
                 if (!repoData.permissions || !repoData.permissions.push) {
                     throw new Error('Token lacks push permission. Edit token scopes in GitHub Settings.');
                 }
 
-                // 2. Test the branch exists
-                const branchRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-                });
+                // 2. Test the branch
+                const branchRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`, { headers });
                 if (!branchRes.ok) {
                     if (branchRes.status === 404) throw new Error(`Branch "${branch}" not found in this repository.`);
                     throw new Error(`GitHub Branch Error: ${branchRes.status}`);
                 }
+
+                // 3. Test if entries.json exists at the path
+                const fullPath = root ? `${root}/data/entries.json` : 'data/entries.json';
+                const fileRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(fullPath)}?ref=${encodeURIComponent(branch)}`, { headers });
+                if (!fileRes.ok) throw new Error(`Path Error: Could not find "${fullPath}" in branch "${branch}".`);
+
             } catch (err) {
                 if (btn) btn.textContent = 'Connect GitHub';
                 toast(err.message, 'error');
@@ -1427,22 +1435,24 @@
             localStorage.setItem('gh_owner', owner);
             localStorage.setItem('gh_repo', repo);
             localStorage.setItem('gh_branch', branch);
+            localStorage.setItem('gh_path', root);
             const s = document.getElementById('gh-status');
-            if (s) { s.textContent = `✓ Connected to ${owner}/${repo}`; s.style.color = 'var(--green)'; }
-            toast('GitHub connected! Changes will now auto-save.', 'success');
+            if (s) { s.innerHTML = `✓ Connected to ${owner}/${repo} (${branch}${root ? `/${root}` : ''})`; s.style.color = 'var(--green)'; }
+            toast('GitHub connected and verified!', 'success');
         }
 
         async function pushToGitHub(path, data, message) {
-            const { token, owner, repo, branch } = getGitHubConfig();
+            const { token, owner, repo, branch, root } = getGitHubConfig();
             if (!token || !owner || !repo) {
                 download(path.split('/').pop(), JSON.stringify(data, null, 2));
                 toast('GitHub not set up — file downloaded. Go to Settings to connect GitHub.', 'error');
                 return;
             }
+            const fullPath = root ? `${root}/${path}` : path;
             const indicator = document.getElementById('save-indicator');
             if (indicator) indicator.textContent = '⏳ Saving…';
             try {
-                const apiBase = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}`;
+                const apiBase = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(fullPath)}`;
                 const headers = {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/vnd.github.v3+json',
