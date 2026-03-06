@@ -4,74 +4,1572 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Brand — Landing</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Dashboard — Admin</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface2: #1e1e1e;
+            --surface3: #282828;
+            --border: #2a2a2a;
+            --accent: #e8e0d5;
+            --accent2: #c8bfb5;
+            --text: #f0ece8;
+            --text2: #aaa;
+            --muted: #666;
+            --green: #4ade80;
+            --red: #f87171;
+            --blue: #60a5fa;
+            --yellow: #fbbf24;
+            --radius: 10px;
+            --sidebar-w: 220px;
+            --header-h: 56px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ─── Layout ─── */
+        #app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px 18px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .sidebar-nav {
+            padding: 12px 10px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 8px 8px 4px;
+            margin-top: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            color: var(--text2);
+            margin-bottom: 2px;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .nav-item:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: var(--surface3);
+            color: var(--text);
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.7;
+            flex-shrink: 0;
+        }
+
+        .nav-item.active .nav-icon {
+            opacity: 1;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--accent);
+            color: #0a0a0a;
+            font-size: 0.65rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 2px 7px;
+        }
+
+        .sidebar-footer {
+            padding: 12px 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius);
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--surface3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-email {
+            font-size: 0.75rem;
+            color: var(--text2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            border-radius: 6px;
+            transition: color 0.15s;
+        }
+
+        .logout-btn:hover {
+            color: var(--red);
+        }
+
+        /* ─── Main ─── */
+        .main {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            height: var(--header-h);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 28px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-title {
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .topbar-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: none;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text2);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #0a0a0a;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* ─── Pages ─── */
+        .page {
+            display: none;
+            padding: 28px;
+            animation: fadeSlide 0.2s ease;
+            flex: 1;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── Cards ─── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 24px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .card-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        /* ─── Stats ─── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 22px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1;
+        }
+
+        .stat-sub {
+            font-size: 0.75rem;
+            color: var(--text2);
+            margin-top: 6px;
+        }
+
+        .stat-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .dot-green {
+            background: var(--green);
+        }
+
+        .dot-blue {
+            background: var(--blue);
+        }
+
+        .dot-yellow {
+            background: var(--yellow);
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        /* ─── Forms ─── */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 7px;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="date"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 0.88rem;
+            padding: 10px 13px;
+            outline: none;
+            transition: border-color 0.15s;
+            font-family: inherit;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--accent2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* ─── Entries ─── */
+        .entry-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .entry-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: border-color 0.15s;
+        }
+
+        .entry-card:hover {
+            border-color: var(--accent2);
+        }
+
+        .entry-thumb {
+            width: 52px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+            background: var(--surface3);
+        }
+
+        .entry-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .entry-author {
+            font-weight: 600;
+            font-size: 0.88rem;
+            margin-bottom: 3px;
+        }
+
+        .entry-excerpt {
+            color: var(--text2);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .entry-date {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text2);
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 7px;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+
+        .icon-btn:hover {
+            background: var(--surface3);
+            color: var(--text);
+        }
+
+        .icon-btn.danger:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* ─── Modal ─── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px 28px 24px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.97);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.open .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 4px;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        /* ─── Toast ─── */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--surface3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 18px;
+            font-size: 0.82rem;
+            color: var(--text);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            animation: toastIn 0.2s ease;
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--green);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--red);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── Misc ─── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .section-sub {
+            font-size: 0.78rem;
+            color: var(--text2);
+            margin-top: 2px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .social-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 13px;
+            margin-bottom: 8px;
+        }
+
+        .social-row input {
+            background: transparent;
+            border: none;
+            padding: 0;
+            flex: 1;
+        }
+
+        .social-row input:focus {
+            border: none;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 4px;
+            border-radius: 5px;
+            transition: color 0.15s;
+        }
+
+        .remove-btn:hover {
+            color: var(--red);
+        }
+
+        .inline-edit-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .inline-edit-group input {
+            flex: 1;
+        }
+
+        .analytics-embed {
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--surface2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--muted);
+        }
+
+        .empty-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .empty-msg {
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-green {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--green);
+        }
+
+        .save-indicator {
+            font-size: 0.78rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- HEADER -->
-    <header class="site-header" role="banner">
-        <div class="header-left">
-            <a href="index.html" aria-label="Home">
-                <img class="icon-home" src="assets/icon-home.svg" alt="Home">
-            </a>
-            <a href="index.html">
-                <img class="brand-logo" src="assets/logo-brand.svg" alt="Brand Logo">
-            </a>
+    <div id="toast-container"></div>
+
+    <!-- Entry Modal -->
+    <div class="modal-overlay" id="entryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">New Diary Entry</span>
+                <button class="modal-close" onclick="closeModal('entryModal')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Author</label>
+                <input type="text" id="m-author" placeholder="Author name or Anonymous">
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="m-date">
+            </div>
+            <div class="form-group">
+                <label>Entry Text</label>
+                <textarea id="m-text" rows="5" placeholder="Write the diary entry…"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Illustration path (e.g. assets/illustration-left.svg)</label>
+                <input type="text" id="m-image" placeholder="assets/illustration-left.svg">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('entryModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+            </div>
         </div>
-        <div class="header-right">
-            <div class="social-icons">
-                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Social Link 1">
-                    <img src="assets/icon-social-1.svg" alt="Social">
-                </a>
-                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Social Link 2">
-                    <img src="assets/icon-social-2.svg" alt="Social">
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <div class="landing-page" id="landing-page">
-        <main class="landing-main" role="main">
-            <!-- Hero: Center Content -->
-            <div class="hero-center">
-                <img class="hero-ornament" src="assets/ornament-hanging.svg" alt="Ornament" loading="lazy">
-                <img class="hero-logo" src="assets/logo-hero.svg" alt="Hero Logo">
-            </div>
-
-            <!-- Hand-drawn illustrations in corners -->
-            <div class="illustration-left">
-                <img src="assets/illustration-left.svg" alt="Illustration" loading="lazy">
-            </div>
-            <div class="illustration-right">
-                <img src="assets/illustration-right.svg" alt="About" loading="lazy">
-            </div>
-
-            <!-- Diary Button (Bottom Center) -->
-            <div class="diary-btn-wrap">
-                <a class="diary-btn" href="diary.html">
-                    diary
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                </a>
-            </div>
-        </main>
     </div>
 
-    <!-- FOOTER -->
-    <footer class="site-footer" role="contentinfo">
-        <div class="footer-left">
-            <span>&copy; 2026 Your Brand</span>
-        </div>
-        <div class="footer-right">
-            <a href="#">Terms and Policies</a>
-        </div>
-    </footer>
+    <div id="app">
 
-    <script src="js/main.js"></script>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">✦</div>
+                <div>
+                    <div class="sidebar-title">Dashboard</div>
+                    <div class="sidebar-subtitle">Content Manager</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Overview</div>
+                <button class="nav-item active" onclick="showPage('overview', this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    Overview
+                </button>
+                <div class="nav-section-label">Content</div>
+                <button class="nav-item" onclick="showPage('diary', this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    Diary Entries
+                    <span class="nav-badge" id="entriesCount">0</span>
+                </button>
+                <button class="nav-item" onclick="showPage('submissions', this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    Form Submissions
+                </button>
+                <div class="nav-section-label">Manage</div>
+                <button class="nav-item" onclick="showPage('page-content', this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    Page Content
+                </button>
+                <button class="nav-item" onclick="showPage('analytics', this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    Analytics
+                </button>
+                <button class="nav-item" onclick="showPage('settings', this)">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    Site Settings
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-row">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-info">
+                        <div class="user-email">Admin</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()" title="Sign out">↪</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="main">
+            <header class="topbar">
+                <span class="topbar-title" id="topbar-title">Overview</span>
+                <div class="topbar-actions">
+                    <span class="save-indicator" id="save-indicator"></span>
+                    <a href="/" target="_blank" class="btn btn-ghost">View Site ↗</a>
+                </div>
+            </header>
+
+            <!-- Overview -->
+            <div class="page active" id="page-overview">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Diary Entries</div>
+                        <div class="stat-value" id="s-entries">—</div>
+                        <div class="stat-sub"><span class="stat-dot dot-green"></span>Live on site</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Form Submissions</div>
+                        <div class="stat-value">—</div>
+                        <div class="stat-sub"><span class="stat-dot dot-blue"></span>Via Cloudflare/Netlify Forms</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pages</div>
+                        <div class="stat-value">4</div>
+                        <div class="stat-sub"><span class="stat-dot dot-yellow"></span>Index, Diary, Submit, Success
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Status</div>
+                        <div class="stat-value" style="font-size:1.1rem;margin-top:6px;"><span
+                                class="badge badge-green">Live</span></div>
+                        <div class="stat-sub"><span class="stat-dot dot-green"></span>Deployed on Cloudflare Pages</div>
+                    </div>
+                </div>
+                <div class="grid2">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Recent Entries</span>
+                            <button class="btn btn-ghost" onclick="navToDiary()">View all →</button>
+                        </div>
+                        <div id="recent-entries-preview"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Quick Actions</span></div>
+                        <div style="display:flex;flex-direction:column;gap:10px;">
+                            <button class="btn btn-primary" onclick="navToDiary(); openNewEntry()">+ New Diary
+                                Entry</button>
+                            <button class="btn btn-ghost" onclick="navToPage('page-content')">✏️ Edit Page
+                                Content</button>
+                            <button class="btn btn-ghost" onclick="navToPage('analytics')">📊 View Analytics</button>
+                            <button class="btn btn-ghost" onclick="navToPage('settings')">⚙️ GitHub Setup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diary -->
+            <div class="page" id="page-diary">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Diary Entries</div>
+                        <div class="section-sub">Manage all entries displayed on the Diary page</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="openNewEntry()">+ New Entry</button>
+                </div>
+                <div class="card">
+                    <div id="entry-list-wrap">
+                        <div class="empty-state">
+                            <div class="empty-icon">📖</div>
+                            <div class="empty-msg">Loading entries…</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submissions -->
+            <div class="page" id="page-submissions">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Form Submissions</div>
+                        <div class="section-sub">Visitor diary submissions from the Submit page</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <p style="color:var(--text2);font-size:0.85rem;line-height:1.7;">
+                        Since external services like Netlify have been removed, public submissions cannot be
+                        automatically saved to your GitHub.
+                        <br><br>
+                        Instead, the <strong>submit.html</strong> page now opens the visitor's email client (via a
+                        <code>mailto:</code> link) to email the diary entry directly to you.
+                        <br><br>
+                        <strong style="color:var(--text);">How it works:</strong> When you receive a diary entry via
+                        email, simply copy it and go to the <strong style="color:var(--accent2); cursor:pointer;"
+                            onclick="navToDiary()">Diary Entries tab</strong> to publish it manually. This ensures a
+                        100% private, zero-cost, serverless setup.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            <div class="page" id="page-page-content">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Page Content</div>
+                        <div class="section-sub">Control logos, hero text, footer, and page titles</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()">Save All Changes</button>
+                </div>
+                <div class="grid2" style="gap:16px;">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Branding & Titles</span></div>
+                        <div class="form-group"><label>Site Title (browser tab)</label><input type="text"
+                                id="pc-site-title" placeholder="Your Brand"></div>
+                        <div class="form-group"><label>Hero Page Title</label><input type="text" id="pc-hero-title"
+                                placeholder="Your Brand — Landing"></div>
+                        <div class="form-group"><label>Diary Page Title</label><input type="text" id="pc-diary-title"
+                                placeholder="Your Brand — Diary"></div>
+                        <div class="form-group"><label>Submit Page Title</label><input type="text" id="pc-submit-title"
+                                placeholder="Your Brand — Submit"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Footer</span></div>
+                        <div class="form-group"><label>Copyright Text</label><input type="text" id="pc-footer-copy"
+                                placeholder="© 2026 Your Brand"></div>
+                        <div class="form-group"><label>Terms & Policies URL</label><input type="url" id="pc-terms-link"
+                                placeholder="https://…"></div>
+                        <div class="form-group"><label>Terms Link Label</label><input type="text" id="pc-terms-label"
+                                placeholder="Terms and Policies"></div>
+                    </div>
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <div class="card-header"><span class="card-title">Social Links</span></div>
+                        <p style="color:var(--text2);font-size:0.8rem;margin-bottom:14px;">Shown in header on all pages.
+                        </p>
+                        <div id="social-links-wrap"></div>
+                        <button class="btn btn-ghost" style="margin-top:10px;" onclick="addSocialLink()">+ Add Social
+                            Link</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics -->
+            <div class="page" id="page-analytics">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Analytics</div>
+                        <div class="section-sub">Powered by GoatCounter — free, privacy-first</div>
+                    </div>
+                    <a href="https://goatcounter.com" target="_blank" class="btn btn-ghost">Open Dashboard ↗</a>
+                </div>
+                <div class="card" style="margin-bottom:16px;">
+                    <div class="card-header"><span class="card-title">Connect GoatCounter</span></div>
+                    <p style="color:var(--text2);font-size:0.85rem;line-height:1.8;margin-bottom:16px;">
+                        Create a free account at <a href="https://goatcounter.com" target="_blank"
+                            style="color:var(--accent2);">GoatCounter.com</a>, then enter your site code to embed your
+                        analytics dashboard here.
+                    </p>
+                    <div class="form-group">
+                        <label>Your GoatCounter Site Code</label>
+                        <div class="inline-edit-group">
+                            <input type="text" id="gc-code" placeholder="mysite">
+                            <button class="btn btn-primary" onclick="saveGoatCounter()">Connect</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="analytics-embed-wrap" style="display:none;">
+                    <div class="card"><iframe id="gc-iframe" class="analytics-embed" src=""
+                            title="Analytics Dashboard"></iframe></div>
+                </div>
+                <div class="grid3" style="margin-top:16px;">
+                    <div class="stat-card">
+                        <div class="stat-label">Entries Published</div>
+                        <div class="stat-value" id="al-entries">—</div>
+                        <div class="stat-sub">Diary entries live</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pages in Site</div>
+                        <div class="stat-value">4</div>
+                        <div class="stat-sub">index, diary, submit, success</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Last Updated</div>
+                        <div class="stat-value" id="al-updated" style="font-size:1rem;padding-top:4px;">—</div>
+                        <div class="stat-sub">Via GitHub commit</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="page" id="page-settings">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Site Settings</div>
+                        <div class="section-sub">Configure GitHub auto-save and download data files</div>
+                    </div>
+                </div>
+                <div class="grid2">
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <div class="card-header">
+                            <span class="card-title">🔗 GitHub Auto-Save</span>
+                            <span id="gh-status" style="font-size:0.78rem;color:var(--muted);">Not connected</span>
+                        </div>
+                        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:18px;line-height:1.7;">
+                            Connect your GitHub account so every change auto-commits to your repo. Cloudflare Pages
+                            redeploys in ~30 seconds.
+                        </p>
+                        <div class="settings-grid">
+                            <div class="form-group"><label>GitHub Personal Access Token</label><input type="password"
+                                    id="gh-token" placeholder="ghp_xxxxxxxxxxxx"></div>
+                            <div class="form-group"><label>Repository Owner (GitHub username)</label><input type="text"
+                                    id="gh-owner" placeholder="yourusername"></div>
+                            <div class="form-group"><label>Repository Name</label><input type="text" id="gh-repo"
+                                    placeholder="my-static-site"></div>
+                            <div class="form-group"><label>Branch (default: main)</label><input type="text"
+                                    id="gh-branch" placeholder="main"></div>
+                            <div class="form-group" style="grid-column: span 1;"><label>Folder Path in Repo
+                                    (optional)</label><input type="text" id="gh-path" placeholder="e.g. my-folder">
+                            </div>
+                        </div>
+                        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+                            <button class="btn btn-primary" id="gh-connect-btn" onclick="saveGitHubConfig()">Connect &
+                                Run Diagnostics</button>
+                            <span id="gh-status" style="font-size:0.75rem;">Not connected</span>
+                        </div>
+                        <div id="gh-debug-box" style="margin-top:16px; display:none;">
+                            <label style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">Diagnostic
+                                Console</label>
+                            <pre id="gh-log"
+                                style="background:#000; color:#0f0; padding:12px; border-radius:8px; font-size:0.7rem; max-height:150px; overflow:auto; margin-top:4px; font-family:monospace; border:1px solid #333;"></pre>
+                        </div>
+                        <p style="color:var(--muted);font-size:0.75rem;margin-top:12px;">
+                            🔒 **Privacy:** Token stored in your browser's <code>localStorage</code> only. Use a
+                            "Classic" token with <code>repo</code> scope.
+                        </p>
+                    </div>
+                </div>
+                <div class="grid2" style="margin-top:16px;">
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Current settings.json</span></div>
+                        <pre id="settings-preview"
+                            style="font-size:0.72rem;color:var(--text2);white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto;"></pre>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Manual Download Fallback</span></div>
+                        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:14px;">If GitHub is not connected,
+                            download files and commit manually.</p>
+                        <button class="btn btn-ghost" onclick="downloadSettings()">⬇ Download settings.json</button>
+                        <button class="btn btn-ghost" onclick="downloadEntries()" style="margin-top:8px;">⬇ Download
+                            entries.json</button>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.main -->
+    </div><!-- /#app -->
+
+    <script>
+        // ─── State ───────────────────────────────────────────────────────
+        let ENTRIES = [];
+        let SETTINGS = {};
+        let editingIndex = -1;
+
+        // ─── Auth: GitHub PAT (Client-side) ──────────────────────────────
+        // We use the GitHub PAT stored in localStorage as the authentication key.
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('gh_token')) {
+                window.location.replace('/admin/login.html');
+                return;
+            }
+            initDashboard();
+        });
+
+        function logout() {
+            localStorage.removeItem('gh_token');
+            window.location.href = '/admin/login.html';
+        }
+
+        // ─── Navigation ──────────────────────────────────────────────────
+        function showPage(id, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const page = document.getElementById('page-' + id);
+            if (page) page.classList.add('active');
+            if (btn) btn.classList.add('active');
+            const titles = {
+                overview: 'Overview', diary: 'Diary Entries',
+                submissions: 'Form Submissions', 'page-content': 'Page Content',
+                analytics: 'Analytics', settings: 'Site Settings'
+            };
+            document.getElementById('topbar-title').textContent = titles[id] || id;
+            if (id === 'page-content' || id === 'settings') renderSettings();
+            if (id === 'analytics') loadAnalyticsStats();
+        }
+
+        function navToDiary() {
+            const btn = document.querySelector('.nav-item[onclick*="\'diary\'"]');
+            showPage('diary', btn);
+        }
+
+        function navToPage(id) {
+            const btn = document.querySelector(`.nav-item[onclick*="'${id}'"]`);
+            showPage(id, btn);
+        }
+
+        // ─── Init ────────────────────────────────────────────────────────
+        async function initDashboard() {
+            await loadEntries();
+            await loadSettings();
+            renderOverview();
+
+            // Pre-fill GitHub settings from localStorage
+            const cfg = getGitHubConfig();
+            if (cfg.owner) {
+                document.getElementById('gh-token').value = localStorage.getItem('gh_token') || '';
+                document.getElementById('gh-owner').value = cfg.owner || '';
+                document.getElementById('gh-repo').value = cfg.repo || '';
+                document.getElementById('gh-branch').value = cfg.branch || 'main';
+                document.getElementById('gh-path').value = cfg.root || '';
+            }
+
+            if (cfg.owner && cfg.repo) {
+                const ghStatus = document.getElementById('gh-status');
+                if (ghStatus) { ghStatus.innerHTML = `✓ Connected to ${cfg.owner}/${cfg.repo} (${cfg.branch}${cfg.root ? `/${cfg.root}` : ''})`; ghStatus.style.color = 'var(--green)'; }
+            }
+
+            // Restore GoatCounter
+            const gcCode = localStorage.getItem('gc_code');
+            if (gcCode) { document.getElementById('gc-code').value = gcCode; showGoatCounter(gcCode); }
+        }
+
+        // ─── Data Loading ─────────────────────────────────────────────────
+        async function loadEntries() {
+            try {
+                const r = await fetch('../data/entries.json?t=' + Date.now());
+                const d = await r.json();
+                ENTRIES = (d.entries || d || []).slice();
+            } catch (e) { ENTRIES = []; }
+            renderEntries();
+            updateBadge();
+        }
+
+        async function loadSettings() {
+            try {
+                const r = await fetch('../data/settings.json?t=' + Date.now());
+                SETTINGS = await r.json();
+            } catch (e) {
+                SETTINGS = { site_title: '', footer_copy: '', social_links: [], terms_link: '', terms_label: '' };
+            }
+        }
+
+        // ─── Entries ─────────────────────────────────────────────────────
+        function renderEntries() {
+            const wrap = document.getElementById('entry-list-wrap');
+            if (!ENTRIES.length) {
+                wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📖</div><div class="empty-msg">No entries yet. Add your first one!</div></div>';
+                return;
+            }
+            wrap.innerHTML = '<div class="entry-list">' +
+                ENTRIES.map((e, i) => `
+        <div class="entry-card">
+          <img class="entry-thumb" src="../${e.image}" alt="" onerror="this.style.display='none'">
+          <div class="entry-meta">
+            <div class="entry-author">${e.author || 'Anonymous'}</div>
+            <div class="entry-excerpt">${(e.text || '').substring(0, 90)}…</div>
+            <div class="entry-date">${e.date ? new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</div>
+          </div>
+          <div class="entry-actions">
+            <button class="icon-btn" onclick="editEntry(${i})" title="Edit">✏️</button>
+            <button class="icon-btn danger" onclick="deleteEntry(${i})" title="Delete">🗑️</button>
+          </div>
+        </div>
+      `).join('') + '</div>';
+        }
+
+        function updateBadge() {
+            document.getElementById('entriesCount').textContent = ENTRIES.length;
+            document.getElementById('s-entries').textContent = ENTRIES.length;
+            const ale = document.getElementById('al-entries');
+            if (ale) ale.textContent = ENTRIES.length;
+        }
+
+        function renderOverview() {
+            const wrap = document.getElementById('recent-entries-preview');
+            const recent = ENTRIES.slice(0, 3);
+            if (!recent.length) {
+                wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">📖</div><div class="empty-msg">No entries yet.</div></div>';
+                return;
+            }
+            wrap.innerHTML = '<div class="entry-list">' +
+                recent.map(e => `
+        <div class="entry-card" style="padding:12px 14px;">
+          <div class="entry-meta">
+            <div class="entry-author">${e.author || 'Anonymous'}</div>
+            <div class="entry-excerpt">${(e.text || '').substring(0, 60)}…</div>
+          </div>
+        </div>
+      `).join('') + '</div>';
+        }
+
+        function openNewEntry() {
+            editingIndex = -1;
+            document.getElementById('modalTitle').textContent = 'New Diary Entry';
+            document.getElementById('m-author').value = '';
+            document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('m-text').value = '';
+            document.getElementById('m-image').value = 'assets/illustration-left.svg';
+            openModal('entryModal');
+        }
+
+        function editEntry(i) {
+            editingIndex = i;
+            const e = ENTRIES[i];
+            document.getElementById('modalTitle').textContent = 'Edit Entry';
+            document.getElementById('m-author').value = e.author || '';
+            document.getElementById('m-date').value = e.date || '';
+            document.getElementById('m-text').value = e.text || '';
+            document.getElementById('m-image').value = e.image || '';
+            openModal('entryModal');
+        }
+
+        function saveEntry() {
+            const entry = {
+                author: document.getElementById('m-author').value.trim() || 'Anonymous',
+                date: document.getElementById('m-date').value,
+                text: document.getElementById('m-text').value.trim(),
+                image: document.getElementById('m-image').value.trim() || 'assets/illustration-left.svg'
+            };
+            if (!entry.text) { toast('Entry text is required.', 'error'); return; }
+            if (editingIndex >= 0) { ENTRIES[editingIndex] = entry; }
+            else { ENTRIES.unshift(entry); }
+            closeModal('entryModal');
+            renderEntries();
+            renderOverview();
+            updateBadge();
+            pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Update diary entries');
+        }
+
+        function deleteEntry(i) {
+            if (!confirm('Delete this entry? This cannot be undone.')) return;
+            ENTRIES.splice(i, 1);
+            renderEntries();
+            renderOverview();
+            updateBadge();
+            pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Delete diary entry');
+        }
+
+        // ─── Settings ────────────────────────────────────────────────────
+        function renderSettings() {
+            const s = SETTINGS;
+            const val = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+            val('pc-site-title', s.site_title);
+            val('pc-hero-title', s.hero_title);
+            val('pc-diary-title', s.diary_title);
+            val('pc-submit-title', s.submit_title);
+            val('pc-footer-copy', s.footer_copy);
+            val('pc-terms-link', s.terms_link);
+            val('pc-terms-label', s.terms_label);
+            // GitHub config
+            const cfg = getGitHubConfig();
+            val('gh-owner', cfg.owner);
+            val('gh-repo', cfg.repo);
+            val('gh-branch', cfg.branch !== 'main' ? cfg.branch : '');
+            val('gh-path', cfg.root);
+            renderSocialLinks();
+            const prev = document.getElementById('settings-preview');
+            if (prev) prev.textContent = JSON.stringify(SETTINGS, null, 2);
+        }
+
+        function renderSocialLinks() {
+            const wrap = document.getElementById('social-links-wrap');
+            if (!wrap) return;
+            wrap.innerHTML = (SETTINGS.social_links || []).map((sl, i) => `
+      <div class="social-row">
+        <input type="text" value="${sl.name || ''}" placeholder="Label" oninput="SETTINGS.social_links[${i}].name = this.value">
+        <input type="url" value="${sl.url || ''}" placeholder="https://…" oninput="SETTINGS.social_links[${i}].url = this.value" style="flex:2;">
+        <input type="text" value="${sl.icon || ''}" placeholder="assets/icon-social-1.svg" oninput="SETTINGS.social_links[${i}].icon = this.value" style="flex:1.5;">
+        <button class="remove-btn" onclick="removeSocialLink(${i})">✕</button>
+      </div>
+    `).join('');
+        }
+
+        function addSocialLink() {
+            if (!SETTINGS.social_links) SETTINGS.social_links = [];
+            SETTINGS.social_links.push({ name: '', url: '#', icon: 'assets/icon-social-1.svg' });
+            renderSocialLinks();
+        }
+
+        function removeSocialLink(i) {
+            SETTINGS.social_links.splice(i, 1);
+            renderSocialLinks();
+        }
+
+        function saveSettings() {
+            const get = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+            SETTINGS.site_title = get('pc-site-title');
+            SETTINGS.hero_title = get('pc-hero-title');
+            SETTINGS.diary_title = get('pc-diary-title');
+            SETTINGS.submit_title = get('pc-submit-title');
+            SETTINGS.footer_copy = get('pc-footer-copy');
+            SETTINGS.terms_link = get('pc-terms-link');
+            SETTINGS.terms_label = get('pc-terms-label');
+            const prev = document.getElementById('settings-preview');
+            if (prev) prev.textContent = JSON.stringify(SETTINGS, null, 2);
+            pushToGitHub('data/settings.json', SETTINGS, 'Update site settings');
+        }
+
+        // ─── Analytics ───────────────────────────────────────────────────
+        function loadAnalyticsStats() {
+            const el = document.getElementById('al-updated');
+            if (el) el.textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function saveGoatCounter() {
+            const code = document.getElementById('gc-code').value.trim();
+            if (!code) { toast('Enter your GoatCounter site code first.', 'error'); return; }
+            localStorage.setItem('gc_code', code);
+            showGoatCounter(code);
+            toast('GoatCounter connected!', 'success');
+        }
+
+        function showGoatCounter(code) {
+            const wrap = document.getElementById('analytics-embed-wrap');
+            const iframe = document.getElementById('gc-iframe');
+            if (iframe) iframe.src = `https://${code}.goatcounter.com`;
+            if (wrap) wrap.style.display = 'block';
+        }
+
+        // ─── GitHub API Auto-Push ────────────────────────────────────────
+        function getGitHubConfig() {
+            return {
+                token: (localStorage.getItem('gh_token') || '').trim(),
+                owner: (localStorage.getItem('gh_owner') || '').trim(),
+                repo: (localStorage.getItem('gh_repo') || '').trim(),
+                branch: (localStorage.getItem('gh_branch') || 'main').trim(),
+                root: (localStorage.getItem('gh_path') || '').trim().replace(/^\/+|\/+$/g, '')
+            };
+        }
+
+        function logDiag(msg, isError = false) {
+            const box = document.getElementById('gh-debug-box');
+            const log = document.getElementById('gh-log');
+            if (box) box.style.display = 'block';
+            if (log) {
+                const time = new Date().toLocaleTimeString();
+                log.innerHTML += `[${time}] ${isError ? '❌' : 'ℹ️'} ${msg}\n`;
+                log.scrollTop = log.scrollHeight;
+            }
+        }
+
+        async function saveGitHubConfig() {
+            const btn = document.getElementById('gh-connect-btn');
+            const statusEl = document.getElementById('gh-status');
+            const token = document.getElementById('gh-token').value.trim();
+            const owner = document.getElementById('gh-owner').value.trim();
+            const repo = document.getElementById('gh-repo').value.trim();
+            const branch = document.getElementById('gh-branch').value.trim() || 'main';
+            let root = document.getElementById('gh-path').value.trim().replace(/^\/+|\/+$/g, '');
+
+            if (!token || !owner || !repo) { toast('Token, Owner, and Repo are all required.', 'error'); return; }
+
+            const log = document.getElementById('gh-log');
+            if (log) log.innerHTML = ''; // Reset log
+            logDiag('Starting Diagnostic Trace...');
+
+            try {
+                const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' };
+
+                // 1. Check Token validity
+                logDiag(`Verifying token with GitHub API...`);
+                const userRes = await fetch('https://api.github.com/user', { headers });
+                if (!userRes.ok) throw new Error(`Token invalid (${userRes.status}). Check repo scope.`);
+                const userData = await userRes.json();
+                logDiag(`Authenticated as: ${userData.login}`);
+
+                // 2. Check Repository
+                logDiag(`Locating repository: ${owner}/${repo}...`);
+                const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
+                if (!repoRes.ok) throw new Error(`Repo not found (${repoRes.status}). Check Owner/Repo.`);
+                const repoData = await repoRes.json();
+                logDiag(`Repo found. Push permission: ${repoData.permissions.push}`);
+                if (!repoData.permissions.push) throw new Error('Token lacks push permission.');
+
+                // 3. Check Branch
+                logDiag(`Checking branch: ${branch}...`);
+                const branchRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${branch}`, { headers });
+                if (!branchRes.ok) throw new Error(`Branch "${branch}" not found (404).`);
+                logDiag(`Branch verified.`);
+
+                // 4. Check Path
+                const testPath = root ? `${root}/data/entries.json`.replace(/\/+/g, '/') : 'data/entries.json';
+                logDiag(`Testing file path access: ${testPath}...`);
+                const pathRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${testPath}?ref=${branch}`, { headers });
+                if (!pathRes.ok) throw new Error(`Path Error: Could not find "${testPath}".`);
+                logDiag(`Path verified. Test connection SUCCESSFUL.`);
+
+                // Save
+                localStorage.setItem('gh_token', token);
+                localStorage.setItem('gh_owner', owner);
+                localStorage.setItem('gh_repo', repo);
+                localStorage.setItem('gh_branch', branch);
+                localStorage.setItem('gh_path', root);
+
+                if (statusEl) {
+                    statusEl.innerHTML = `✓ Verified & Connected`;
+                    statusEl.style.color = 'var(--green)';
+                }
+                toast('GitHub connected! Auto-save is active.', 'success');
+
+            } catch (err) {
+                logDiag(err.message, true);
+                if (statusEl) { statusEl.textContent = 'Connection Failed'; statusEl.style.color = 'var(--red)'; }
+                toast('Diagnostic failed: ' + err.message, 'error');
+            }
+        }
+
+        async function pushToGitHub(path, data, message) {
+            const { token, owner, repo, branch, root } = getGitHubConfig();
+            if (!token || !owner || !repo) {
+                download(path.split('/').pop(), JSON.stringify(data, null, 2));
+                toast('GitHub info missing.', 'error');
+                return;
+            }
+
+            // [VER 3.0] Reinforce Path & Encoding
+            let fullPath = path.replace(/^\//, '');
+            if (root) fullPath = root.replace(/\/+$/, '') + '/' + fullPath;
+            fullPath = fullPath.replace(/\/+/g, '/');
+
+            // Encode each segment of the path
+            const encodedPath = fullPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+            const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`;
+
+            logDiag(`--- [VER 3.1] Forensic Start: ${fullPath} ---`);
+            const indicator = document.getElementById('save-indicator');
+            if (indicator) indicator.textContent = '⏳ Saving…';
+
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                };
+
+                // 1. Get SHA
+                logDiag(`Forensic GET: ${apiBase}`);
+                let sha = null;
+                const checkRes = await fetch(`${apiBase}?ref=${encodeURIComponent(branch)}&t=${Date.now()}`, { headers });
+                if (checkRes.ok) {
+                    const d = await checkRes.json();
+                    sha = d.sha;
+                    logDiag(`Forensic SHA: ${sha.substring(0, 7)}`);
+                } else {
+                    logDiag(`Forensic Status: ${checkRes.status}`);
+                }
+
+                // 2. Push
+                logDiag(`Forensic PUT: Committing to ${branch}...`);
+                logDiag(`Final URL: ${apiBase}`);
+                const bytes = new TextEncoder().encode(JSON.stringify(data, null, 2));
+                const content = btoa(String.fromCharCode(...bytes));
+                const body = { message: `[Admin] ${message}`, content, branch: branch.trim() };
+                if (sha) body.sha = sha;
+
+                const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
+                if (res.ok) {
+                    if (indicator) { indicator.textContent = '✓ Saved & deploying'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
+                    toast('Saved to GitHub!', 'success');
+                    logDiag(`✓ SUCCESS: 200 OK.`);
+                } else {
+                    const errStatus = res.status;
+                    const errJson = await res.json().catch(() => ({ message: 'Could not parse error JSON' }));
+                    logDiag(`❌ FAIL ${errStatus}: ${errJson.message}`, true);
+                    throw new Error(errJson.message || `HTTP ${errStatus}`);
+                }
+            } catch (err) {
+                if (indicator) { indicator.textContent = '⚠ Save failed'; setTimeout(() => { indicator.textContent = ''; }, 5000); }
+                toast('GitHub Error: ' + err.message, 'error');
+                logDiag(`CRITICAL: ${err.message}`, true);
+                download(path.split('/').pop(), JSON.stringify(data, null, 2));
+            }
+        }
+
+        // ─── Download Fallback ───────────────────────────────────────────
+        function downloadSettings() { download('settings.json', JSON.stringify(SETTINGS, null, 2)); }
+        function downloadEntries() { download('entries.json', JSON.stringify({ entries: ENTRIES }, null, 2)); }
+        function download(filename, content) {
+            const a = document.createElement('a');
+            a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(content);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            toast(filename + ' downloaded.', 'success');
+        }
+
+        // ─── Modal ───────────────────────────────────────────────────────
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        document.querySelectorAll('.modal-overlay').forEach(o => {
+            o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+        });
+
+        // ─── Toast ───────────────────────────────────────────────────────
+        function toast(msg, type = 'success') {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.innerHTML = (type === 'success' ? '✓ ' : '⚠ ') + msg;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 4500);
+        }
+    </script>
 </body>
 
 </html>
