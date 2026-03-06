@@ -105,6 +105,13 @@
         }
     }
 
+    /* Truncate text to a max word count */
+    function truncateWords(text, maxWords) {
+        const words = text.trim().split(/\s+/);
+        if (words.length <= maxWords) return text;
+        return words.slice(0, maxWords).join(' ') + '\u2026';
+    }
+
     function renderDiaryEntries(entries) {
         const container = document.getElementById('diary-container');
         const nav = document.querySelector('.diary-nav');
@@ -114,25 +121,28 @@
         nav.innerHTML = '';
 
         if (!Array.isArray(entries) || entries.length === 0) {
-            container.innerHTML = '<div class="diary-empty"><p>No entries found. If you are viewing this locally, please use a local server (e.g., Live Server) to see dynamic content.</p></div>';
+            container.innerHTML = '<div class="diary-empty"><p>No entries yet. Be the first to submit one!</p></div>';
             return;
         }
 
         entries.forEach((entry, index) => {
+            // Truncate to 200 words
+            const displayText = truncateWords(entry.text || '', 200);
+
             // Render Entry
             const entryEl = document.createElement('div');
             entryEl.className = 'diary-entry';
             entryEl.setAttribute('data-entry', index);
             entryEl.innerHTML = `
-                <img class="diary-entry__image" src="${entry.image}" alt="Diary Image ${index + 1}">
-                <div class="diary-entry__text">${entry.text}</div>
-                <div class="diary-entry__author">&mdash; ${entry.author}</div>
+                <img class="diary-entry__image" src="${entry.image}" alt="Diary Illustration" loading="lazy">
+                <div class="diary-entry__text">${displayText}</div>
+                <div class="diary-entry__author">&mdash; ${entry.author || 'Anonymous'}</div>
             `;
             container.appendChild(entryEl);
 
-            // Render Nav Dot
+            // Render Nav Dot (hidden by default; updateDots() will show 3)
             const dot = document.createElement('button');
-            dot.className = index === 0 ? 'diary-nav__dot is-active' : 'diary-nav__dot';
+            dot.className = 'diary-nav__dot';
             dot.setAttribute('data-target', index);
             dot.setAttribute('aria-label', `Go to entry ${index + 1}`);
             nav.appendChild(dot);
@@ -143,15 +153,34 @@
        Diary Page: Scroll-Snap Navigation Dots
        ========================================================================= */
 
+    /* Show only 3 dots: prev, current, next */
+    function updateDots(dots, activeIndex) {
+        dots.forEach(function (dot, i) {
+            dot.classList.remove('is-active', 'dot-visible', 'dot-adjacent');
+            const diff = Math.abs(i - activeIndex);
+            if (diff === 0) {
+                dot.classList.add('dot-visible', 'is-active');
+            } else if (diff === 1) {
+                dot.classList.add('dot-visible', 'dot-adjacent');
+            }
+            // dots with diff >= 2 remain hidden (display:none)
+        });
+    }
+
     async function initDiaryNav() {
         const entriesData = await fetchDiaryEntries();
         renderDiaryEntries(entriesData);
 
         const container = document.getElementById('diary-container');
-        const dots = document.querySelectorAll('.diary-nav__dot');
+        const dots = Array.from(document.querySelectorAll('.diary-nav__dot'));
         const entries = document.querySelectorAll('.diary-entry');
 
         if (!container || dots.length === 0 || entries.length === 0) return;
+
+        let currentEntry = 0;
+
+        // Init: show first 3 dots
+        updateDots(dots, 0);
 
         // Click on dot → scroll to entry
         dots.forEach(function (dot) {
@@ -164,21 +193,19 @@
             });
         });
 
-        // Observe which entry is in view → highlight dot
+        // Observe which entry is in view → highlight dot + update 3-dot window
         const observerOptions = {
             root: container,
             rootMargin: '0px',
-            threshold: 0.6,
+            threshold: 0.55,
         };
 
         const observer = new IntersectionObserver(function (observerEntries) {
             observerEntries.forEach(function (entry) {
                 if (entry.isIntersecting) {
                     const index = parseInt(entry.target.getAttribute('data-entry'), 10);
-                    dots.forEach(function (d) { d.classList.remove('is-active'); });
-                    if (dots[index]) {
-                        dots[index].classList.add('is-active');
-                    }
+                    currentEntry = index;
+                    updateDots(dots, index);
                 }
             });
         }, observerOptions);
@@ -188,7 +215,6 @@
         });
 
         // Keyboard navigation (up/down arrows)
-        let currentEntry = 0;
         document.addEventListener('keydown', function (e) {
             if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
                 e.preventDefault();
@@ -203,19 +229,6 @@
                     entries[currentEntry].scrollIntoView({ behavior: 'smooth' });
                 }
             }
-        });
-
-        // Sync currentEntry with scroll position
-        const scrollObserver = new IntersectionObserver(function (observerEntries) {
-            observerEntries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    currentEntry = parseInt(entry.target.getAttribute('data-entry'), 10);
-                }
-            });
-        }, { root: container, threshold: 0.6 });
-
-        entries.forEach(function (entry) {
-            scrollObserver.observe(entry);
         });
     }
 

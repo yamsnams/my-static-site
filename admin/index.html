@@ -1038,9 +1038,7 @@
                     <div class="card">
                         <div class="card-header">
                             <span class="card-title">Recent Entries</span>
-                            <button class="btn btn-ghost"
-                                onclick="showPage('diary', document.querySelector('[onclick*=\"
-                                showPage(\'diary\'\"]'))">View all →</button>
+                            <button class="btn btn-ghost" onclick="navToDiary()">View all →</button>
                         </div>
                         <div id="recent-entries-preview"></div>
                     </div>
@@ -1049,14 +1047,13 @@
                             <span class="card-title">Quick Actions</span>
                         </div>
                         <div style="display:flex;flex-direction:column;gap:10px;">
-                            <button class="btn btn-primary" onclick="showPage('diary', null); openNewEntry()">+ New
-                                Diary Entry</button>
-                            <button class="btn btn-ghost" onclick="showPage('page-content', null)">✏️ Edit Page
+                            <button class="btn btn-primary" onclick="navToDiary(); openNewEntry()">+ New Diary
+                                Entry</button>
+                            <button class="btn btn-ghost" onclick="navToPage('page-content')">✏️ Edit Page
                                 Content</button>
-                            <button class="btn btn-ghost" onclick="showPage('analytics', null)">📊 View
-                                Analytics</button>
-                            <a href="https://app.netlify.com/sites/YOUR-SITE/forms" target="_blank"
-                                class="btn btn-ghost" style="text-align:center;display:block;">📋 Form Dashboard ↗</a>
+                            <button class="btn btn-ghost" onclick="navToPage('analytics')">📊 View Analytics</button>
+                            <a href="https://app.netlify.com" target="_blank" class="btn btn-ghost"
+                                style="text-align:center;display:block;">📋 Form Dashboard ↗</a>
                         </div>
                     </div>
                 </div>
@@ -1217,37 +1214,63 @@
                 <div class="section-header">
                     <div>
                         <div class="section-title">Site Settings</div>
-                        <div class="section-sub">Global site configuration saved to your repository</div>
+                        <div class="section-sub">Configure GitHub auto-save and download data files</div>
                     </div>
-                    <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
                 </div>
 
                 <div class="grid2">
-                    <div class="card">
-                        <div class="card-header"><span class="card-title">How Settings Work</span></div>
-                        <p style="color:var(--text2);font-size:0.82rem;line-height:1.8;">
-                            Changes made here are saved to <code style="color:var(--accent2);">data/settings.json</code>
-                            in your browser's local storage for preview. To permanently save them to your site, download
-                            the updated file and commit it to GitHub.<br><br>
-                            <strong style="color:var(--text);">Note:</strong> In a future update, you can connect
-                            GitHub's API to save directly.
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <div class="card-header">
+                            <span class="card-title">🔗 GitHub Auto-Save</span>
+                            <span id="gh-status" style="font-size:0.78rem;color:var(--muted);">Not connected</span>
+                        </div>
+                        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:18px;line-height:1.7;">
+                            Connect your GitHub account to automatically save content changes directly to your
+                            repository. Netlify will auto-deploy within ~30 seconds of each save.
                         </p>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><span class="card-title">Current Settings File</span></div>
-                        <pre id="settings-preview"
-                            style="font-size:0.72rem;color:var(--text2);white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;"></pre>
+                        <div class="settings-grid">
+                            <div class="form-group">
+                                <label>GitHub Personal Access Token</label>
+                                <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
+                            </div>
+                            <div class="form-group">
+                                <label>Repository Owner (your GitHub username)</label>
+                                <input type="text" id="gh-owner" placeholder="yourusername">
+                            </div>
+                            <div class="form-group">
+                                <label>Repository Name</label>
+                                <input type="text" id="gh-repo" placeholder="my-static-site">
+                            </div>
+                            <div class="form-group">
+                                <label>Branch (default: main)</label>
+                                <input type="text" id="gh-branch" placeholder="main">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveGitHubConfig()" style="margin-top:8px;">Connect
+                            GitHub</button>
+                        <p style="color:var(--muted);font-size:0.75rem;margin-top:12px;">
+                            ⚠️ Your token is stored locally in your browser only. Create a token at GitHub → Settings →
+                            Developer Settings → Personal Access Tokens (Classic). Give it <strong
+                                style="color:var(--accent2);">repo</strong> scope.
+                        </p>
                     </div>
                 </div>
-                <div style="margin-top:16px;">
+
+                <div class="grid2" style="margin-top:16px;">
                     <div class="card">
-                        <div class="card-header"><span class="card-title">Download Updated Settings</span></div>
-                        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:14px;">After making changes via
-                            "Page Content", download the updated settings file and commit it to your GitHub repository.
+                        <div class="card-header"><span class="card-title">Current settings.json</span></div>
+                        <pre id="settings-preview"
+                            style="font-size:0.72rem;color:var(--text2);white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto;"></pre>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span class="card-title">Manual Download Fallback</span></div>
+                        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:14px;">
+                            If GitHub is not connected, download files and commit them manually.
                         </p>
-                        <button class="btn btn-primary" onclick="downloadSettings()">⬇ Download settings.json</button>
-                        <button class="btn btn-ghost" onclick="downloadEntries()" style="margin-left:10px;">⬇ Download
-                            entries.json</button>
+                        <button class="btn btn-ghost" onclick="downloadSettings()">&#8659; Download
+                            settings.json</button>
+                        <button class="btn btn-ghost" onclick="downloadEntries()" style="margin-top:8px;">&#8659;
+                            Download entries.json</button>
                     </div>
                 </div>
             </div>
@@ -1301,7 +1324,7 @@
             }
         }
 
-        // ─── Navigation ──────────────────────────────────────────
+        // ─── Navigation helpers ───────────────────────────────────
         function showPage(id, btn) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1318,6 +1341,16 @@
             // Lazy load
             if (id === 'page-content' || id === 'settings') renderSettings();
             if (id === 'analytics') loadAnalyticsStats();
+        }
+
+        function navToDiary() {
+            const diaryBtn = document.querySelector('.nav-item[onclick*="\'diary\'"]');
+            showPage('diary', diaryBtn);
+        }
+
+        function navToPage(id) {
+            const btn = document.querySelector(`.nav-item[onclick*="'${id}'"]`);
+            showPage(id, btn);
         }
 
         // ─── Init ────────────────────────────────────────────────
@@ -1435,24 +1468,23 @@
 
             if (editingIndex >= 0) {
                 ENTRIES[editingIndex] = entry;
-                toast('Entry updated. Download & commit entries.json.', 'success');
             } else {
                 ENTRIES.unshift(entry);
-                toast('Entry added. Download & commit entries.json.', 'success');
             }
             closeModal('entryModal');
             renderEntries();
             renderOverview();
             updateBadge();
+            pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Update diary entries');
         }
 
         function deleteEntry(i) {
-            if (!confirm('Delete this entry?')) return;
+            if (!confirm('Delete this entry? This cannot be undone.')) return;
             ENTRIES.splice(i, 1);
             renderEntries();
             renderOverview();
             updateBadge();
-            toast('Entry deleted. Download & commit entries.json.', 'success');
+            pushToGitHub('data/entries.json', { entries: ENTRIES }, 'Delete diary entry');
         }
 
         // ─── Settings ────────────────────────────────────────────
@@ -1501,7 +1533,7 @@
             SETTINGS.terms_link = document.getElementById('pc-terms-link').value.trim();
             SETTINGS.terms_label = document.getElementById('pc-terms-label').value.trim();
             document.getElementById('settings-preview').textContent = JSON.stringify(SETTINGS, null, 2);
-            toast('Settings saved locally. Download & commit settings.json to apply to site.', 'success');
+            pushToGitHub('data/settings.json', SETTINGS, 'Update site settings');
         }
 
         // ─── Analytics ───────────────────────────────────────────
@@ -1524,15 +1556,93 @@
             wrap.style.display = 'block';
         }
 
-        // ─── Download Helpers ────────────────────────────────────
-        function downloadSettings() {
-            saveSettings();
-            download('settings.json', JSON.stringify(SETTINGS, null, 2));
+        // ─── GitHub API Auto-Push ───────────────────────────────
+        function getGitHubConfig() {
+            return {
+                token: localStorage.getItem('gh_token'),
+                owner: localStorage.getItem('gh_owner'),
+                repo: localStorage.getItem('gh_repo'),
+                branch: localStorage.getItem('gh_branch') || 'main'
+            };
         }
 
-        function downloadEntries() {
-            download('entries.json', JSON.stringify({ entries: ENTRIES }, null, 2));
+        function saveGitHubConfig() {
+            const token = document.getElementById('gh-token').value.trim();
+            const owner = document.getElementById('gh-owner').value.trim();
+            const repo = document.getElementById('gh-repo').value.trim();
+            const branch = document.getElementById('gh-branch').value.trim() || 'main';
+            if (!token || !owner || !repo) { toast('All GitHub fields are required.', 'error'); return; }
+            localStorage.setItem('gh_token', token);
+            localStorage.setItem('gh_owner', owner);
+            localStorage.setItem('gh_repo', repo);
+            localStorage.setItem('gh_branch', branch);
+            document.getElementById('gh-status').textContent = `✓ Connected to ${owner}/${repo}`;
+            document.getElementById('gh-status').style.color = 'var(--green)';
+            toast('GitHub connected! Changes will now auto-save to your repo.', 'success');
         }
+
+        async function pushToGitHub(path, data, message) {
+            const { token, owner, repo, branch } = getGitHubConfig();
+            if (!token || !owner || !repo) {
+                // Fallback: download the file
+                download(path.split('/').pop(), JSON.stringify(data, null, 2));
+                toast('GitHub not set up. File downloaded — commit manually. Connect GitHub in Settings to auto-save.', 'error');
+                return;
+            }
+
+            // Show saving indicator
+            const indicator = document.getElementById('save-indicator');
+            indicator.textContent = '⏳ Saving to GitHub…';
+
+            try {
+                // Step 1: Get current file SHA (needed to update existing file)
+                const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+                const headers = {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                };
+
+                let sha = null;
+                try {
+                    const existingRes = await fetch(apiBase + `?ref=${branch}`, { headers });
+                    if (existingRes.ok) {
+                        const existing = await existingRes.json();
+                        sha = existing.sha;
+                    }
+                } catch (e) { /* File may not exist yet */ }
+
+                // Step 2: Push the updated content
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+                const body = { message: `[Admin] ${message}`, content, branch };
+                if (sha) body.sha = sha;
+
+                const res = await fetch(apiBase, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (res.ok) {
+                    indicator.textContent = '✓ Saved & deployed';
+                    toast('Saved to GitHub! Netlify will update in ~30 seconds.', 'success');
+                    setTimeout(() => { indicator.textContent = ''; }, 5000);
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.message || 'GitHub API error');
+                }
+            } catch (err) {
+                indicator.textContent = '⚠ Save failed';
+                toast('GitHub save failed: ' + err.message, 'error');
+                setTimeout(() => { indicator.textContent = ''; }, 5000);
+                // Fallback to download
+                download(path.split('/').pop(), JSON.stringify(data, null, 2));
+            }
+        }
+
+        // ─── Download Helpers (fallback) ──────────────────────────
+        function downloadSettings() { download('settings.json', JSON.stringify(SETTINGS, null, 2)); }
+        function downloadEntries() { download('entries.json', JSON.stringify({ entries: ENTRIES }, null, 2)); }
 
         function download(filename, content) {
             const a = document.createElement('a');
@@ -1541,7 +1651,7 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            toast(filename + ' downloaded.', 'success');
+            toast(filename + ' downloaded — commit to GitHub to publish.', 'success');
         }
 
         // ─── Modal ───────────────────────────────────────────────
